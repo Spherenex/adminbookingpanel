@@ -1,3 +1,4 @@
+// // 
 
 
 
@@ -8,7 +9,7 @@
 // import { database, storage } from '../firebase';
 // import { 
 //   Users, Calendar, DollarSign, Ticket, Thermometer, Droplets, Wine, 
-//   AlertTriangle, Camera, X, CheckCircle, XCircle, Video, VideoOff, User, UserPlus, Shield, List
+//   AlertTriangle, Camera, X, CheckCircle, XCircle, Video, VideoOff, User, UserPlus, Shield, List, Wind
 // } from 'lucide-react';
 // import '../styles/AdminDashboard.css';
 
@@ -19,11 +20,13 @@
 //     pendingPayments: 0,
 //     completedPayments: 0,
 //     recentBookings: [],
-//     temperature: Math.floor(Math.random() * (30 - 20 + 1)) + 20,
-//     humidity: Math.floor(Math.random() * (80 - 40 + 1)) + 40,
-//     alcoholDetection: 'Normal',
-//     unusualActivity: 'None',
-//     activityStatus: 0 // Numeric status: 0=normal, 1=fire, 2=crowd/fighting
+//     temperature: 0,
+//     humidity: 0,
+//     alcoholDetection: 'No detection',
+//     gasDetection: 'No detection',
+//     fireDetection: 'No detection',
+//     unusualActivity: 'Normal',
+//     activityStatus: 0 // Numeric status: 0=normal, 1=fire
 //   });
 //   const [loading, setLoading] = useState(true);
 //   const [showCamera, setShowCamera] = useState(false);
@@ -32,11 +35,9 @@
 //   const [verified, setVerified] = useState(null);
 //   const [verificationStatus, setVerificationStatus] = useState(0); // 0=not verified/no activity, 1=verified
 //   const [monitoringActive, setMonitoringActive] = useState(false);
-//   const [unusualActivityDetected, setUnusualActivityDetected] = useState(false);
+//   const [fireDetected, setFireDetected] = useState(false);
 //   const [blinking, setBlinking] = useState(false);
-//   const [activityStatus, setActivityStatus] = useState("Normal");
 //   const [fireDetectionCount, setFireDetectionCount] = useState(0);
-//   const [fightingDetectionCount, setFightingDetectionCount] = useState(0);
 //   const [lastFrameData, setLastFrameData] = useState(null);
 //   const [motionLevel, setMotionLevel] = useState(0);
 //   const [verificationLogs, setVerificationLogs] = useState([]);
@@ -50,7 +51,6 @@
 //   const monitoringCanvasRef = useRef(null);
 //   const monitoringIntervalRef = useRef(null);
 //   const analysisIntervalRef = useRef(null);
-//   const alertTimeoutRef = useRef(null);
 //   const motionCanvasRef = useRef(null);
 
 //   // Check and reset alert state on component mount and unmount
@@ -64,7 +64,7 @@
 //         if (snapshot.exists()) {
 //           const data = snapshot.val();
           
-//           if (data.status > 0) { // If status is 1 or 2 (fire or crowd)
+//           if (data.status > 0) { // If status is 1 (fire)
 //             // Check if the alert is older than 1 minute
 //             const alertTime = new Date(data.timestamp);
 //             const currentTime = new Date();
@@ -87,10 +87,16 @@
     
 //     checkAndResetAlert();
     
-//     // Cleanup function to reset alert state when component unmounts
+//     // Cleanup function when component unmounts
 //     return () => {
-//       if (alertTimeoutRef.current) {
-//         clearTimeout(alertTimeoutRef.current);
+//       if (monitoringStreamRef.current) {
+//         monitoringStreamRef.current.getTracks().forEach(track => track.stop());
+//       }
+//       if (monitoringIntervalRef.current) {
+//         clearInterval(monitoringIntervalRef.current);
+//       }
+//       if (analysisIntervalRef.current) {
+//         clearInterval(analysisIntervalRef.current);
 //       }
       
 //       // Reset Firebase alert state on unmount to prevent persisting alerts
@@ -109,6 +115,7 @@
 //   useEffect(() => {
 //     setLoading(true);
 //     const fetchStats = async () => {
+//       // Fetch users data
 //       const usersRef = ref(database, 'users');
 //       onValue(usersRef, (snapshot) => {
 //         if (snapshot.exists()) {
@@ -121,6 +128,7 @@
 //         }
 //       });
       
+//       // Fetch bookings data
 //       const bookingsRef = ref(database, 'stadium_transactions');
 //       onValue(bookingsRef, (snapshot) => {
 //         if (snapshot.exists()) {
@@ -167,41 +175,63 @@
 //             unusualActivity: activityData.message || 'Normal'
 //           }));
           
-//           if (statusCode > 0) { // If status is 1 or 2
-//             setUnusualActivityDetected(true);
+//           if (statusCode === 1) { // Fire detected
+//             setFireDetected(true);
 //             setBlinking(true);
-            
-//             if (statusCode === 1) {
-//               setActivityStatus("Fire detected");
-//             } else if (statusCode === 2) {
-//               setActivityStatus("Fighting detected");
-//             }
-            
-//             // Set a timeout to automatically reset the alert after 1 minute (60 seconds)
-//             if (alertTimeoutRef.current) {
-//               clearTimeout(alertTimeoutRef.current);
-//             }
-            
-//             alertTimeoutRef.current = setTimeout(async () => {
-//               console.log("Auto-resetting alert after 1 minute");
-//               const monitoringRef = ref(database, 'monitoring/unusualActivity');
-//               await set(monitoringRef, {
-//                 status: 0,
-//                 message: 'Normal',
-//                 timestamp: new Date().toISOString()
-//               });
-//               alertTimeoutRef.current = null;
-//             }, 60000); // 60 seconds = 1 minute
 //           } else {
-//             setUnusualActivityDetected(false);
+//             setFireDetected(false);
 //             setBlinking(false);
-//             setActivityStatus("Normal");
+//           }
+//         }
+//       });
+
+//       // Fetch sensor data from Firebase
+//       const sensorsRef = ref(database, 'IPL_Ticket/Sensors');
+//       onValue(sensorsRef, (snapshot) => {
+//         if (snapshot.exists()) {
+//           const sensorsData = snapshot.val();
+          
+//           // Parse temperature value
+//           const temperature = parseFloat(sensorsData.Temperature) || 0;
+          
+//           // Parse humidity value
+//           const humidity = parseFloat(sensorsData.Humidity) || 0;
+          
+//           // Check alcohol detection status
+//           const alcoholValue = parseInt(sensorsData.Alcohol) || 0;
+//           const alcoholStatus = alcoholValue === 0 ? 'No detection' : 'Alcohol detected';
+          
+//           // Check gas detection status
+//           const gasValue = parseInt(sensorsData.Gas) || 0;
+//           const gasStatus = gasValue === 0 ? 'No detection' : 'Gas detected';
+          
+//           // Check fire detection status from Firebase
+//           const fireValue = parseInt(sensorsData.Fire) || 0;
+//           const fireStatus = fireValue === 0 ? 'No detection' : 'Fire detected';
+          
+//           // Update stats with sensor data
+//           setStats(prevStats => ({
+//             ...prevStats,
+//             temperature,
+//             humidity,
+//             alcoholDetection: alcoholStatus,
+//             gasDetection: gasStatus,
+//             fireDetection: fireStatus
+//           }));
+          
+//           // If fire is detected from the backend sensor (Firebase value is 1)
+//           if (fireValue === 1) {
+//             // Update Firebase with status 1 for fire detection
+//             const monitoringRef = ref(database, 'monitoring/unusualActivity');
+//             const timestamp = new Date().toISOString();
             
-//             // Clear any existing auto-reset timeout
-//             if (alertTimeoutRef.current) {
-//               clearTimeout(alertTimeoutRef.current);
-//               alertTimeoutRef.current = null;
-//             }
+//             set(monitoringRef, {
+//               status: 1,
+//               message: 'Fire detected',
+//               timestamp: timestamp
+//             }).catch(err => {
+//               console.error("Error updating firebase with fire detection:", err);
+//             });
 //           }
 //         }
 //       });
@@ -209,6 +239,19 @@
     
 //     fetchStats();
 //   }, []);
+
+//   // Effect for blinking
+//   useEffect(() => {
+//     let blinkInterval;
+//     if (blinking) {
+//       blinkInterval = setInterval(() => {
+//         setBlinking(prev => !prev);
+//       }, 500);
+//     }
+//     return () => {
+//       if (blinkInterval) clearInterval(blinkInterval);
+//     };
+//   }, [blinking]);
 
 //   // Initialize verification logs for all bookings
 //   const initializeVerificationLogs = async (bookings) => {
@@ -281,19 +324,6 @@
 //     }
 //   };
 
-//   // Effect for blinking
-//   useEffect(() => {
-//     let blinkInterval;
-//     if (blinking) {
-//       blinkInterval = setInterval(() => {
-//         setBlinking(prev => !prev);
-//       }, 500);
-//     }
-//     return () => {
-//       if (blinkInterval) clearInterval(blinkInterval);
-//     };
-//   }, [blinking]);
-
 //   // Clean up camera resources
 //   useEffect(() => {
 //     return () => {
@@ -308,9 +338,6 @@
 //       }
 //       if (analysisIntervalRef.current) {
 //         clearInterval(analysisIntervalRef.current);
-//       }
-//       if (alertTimeoutRef.current) {
-//         clearTimeout(alertTimeoutRef.current);
 //       }
 //     };
 //   }, []);
@@ -349,37 +376,17 @@
 //   // Monitoring cards
 //   const monitoringCards = [
 //     { title: 'Alcohol Detection', value: stats.alcoholDetection, icon: <Wine size={24} />, gradientClass: 'gradient-red' },
+//     { title: 'Gas Detection', value: stats.gasDetection, icon: <Wind size={24} />, gradientClass: 'gradient-gas' },
+//     { title: 'Fire Detection', value: stats.fireDetection, icon: <AlertTriangle size={24} />, gradientClass: fireDetected && blinking ? 'gradient-fire-blink' : 'gradient-fire' },
 //     { title: 'Temperature', value: `${stats.temperature}°C`, icon: <Thermometer size={24} />, gradientClass: 'gradient-orange' },
 //     { title: 'Humidity', value: `${stats.humidity}%`, icon: <Droplets size={24} />, gradientClass: 'gradient-blue' },
 //     { 
 //       title: 'Unusual Activity', 
-//       value: stats.activityStatus, 
+//       value: stats.activityStatus === 0 ? 'Normal' : 'Fire detected', 
 //       icon: <AlertTriangle size={24} />, 
-//       gradientClass: unusualActivityDetected ? (blinking ? 'gradient-alert-blink' : 'gradient-alert') : 'gradient-purple' 
+//       gradientClass: fireDetected && blinking ? 'gradient-alert-blink' : 'gradient-purple' 
 //     }
 //   ];
-
-//   // Log unusual activity to history
-//   const logUnusualActivity = async (status, message) => {
-//     try {
-//       const activityId = `activity_${Date.now()}`;
-//       const timestamp = new Date().toISOString();
-      
-//       // Log to activity history
-//       const historyRef = ref(database, `monitoring/activityHistory/${activityId}`);
-//       await set(historyRef, {
-//         status: status, // 0=normal, 1=fire, 2=fighting
-//         message: message,
-//         timestamp: timestamp,
-//         location: "Main Stadium",
-//         resolved: false
-//       });
-      
-//       console.log(`Activity logged to history: ${message} (Status: ${status})`);
-//     } catch (error) {
-//       console.error('Error logging activity:', error);
-//     }
-//   };
 
 //   // Enhanced fire detection algorithm
 //   const detectFire = (imageData) => {
@@ -421,7 +428,7 @@
 //     // Debug information
 //     console.log(`Fire detection: ${fireRatio.toFixed(4)} (${firePixelCount} fire pixels, ${brightYellowCount} yellow, ${brightWhiteCount} white)`);
     
-//     // More stringent threshold to avoid false positives on fighting scenes
+//     // More stringent threshold to avoid false positives
 //     return fireRatio > 0.005;
 //   };
 
@@ -454,75 +461,14 @@
     
 //     return motionRatio;
 //   };
-
-//   // Detect skin tones (for human detection)
-//   const detectSkinTones = (imageData) => {
-//     const data = imageData.data;
-//     let skinTonePixels = 0;
-    
-//     for (let i = 0; i < data.length; i += 4) {
-//       const r = data[i];
-//       const g = data[i+1];
-//       const b = data[i+2];
-      
-//       // Simple skin tone detection (various skin tones)
-//       // Covers a range from lighter to darker skin colors
-//       if (
-//         // Lighter skin tones
-//         (r > 180 && g > 140 && g < 200 && b > 100 && b < 170 && 
-//          r > g && r > b && g > b) ||
-//         // Medium skin tones
-//         (r > 150 && g > 100 && g < 170 && b > 70 && b < 140 && 
-//          r > g && r > b) ||
-//         // Darker skin tones
-//         (r > 100 && r < 150 && g > 60 && g < 120 && b > 40 && b < 90 && 
-//          r > g && r > b)
-//       ) {
-//         skinTonePixels++;
-//       }
-//     }
-    
-//     const totalPixels = imageData.width * imageData.height;
-//     const skinRatio = skinTonePixels / totalPixels;
-    
-//     // Debug info
-//     console.log(`Skin tone detection: ${(skinRatio * 100).toFixed(2)}% skin pixels`);
-    
-//     return skinRatio;
-//   };
-
-//   // Detect fighting/crowding by combining motion and skin tone detection
-//   const detectFighting = (imageData, previousFrameData, motionLevel) => {
-//     // In real fight detection, we'd analyze motion patterns, postures, etc.
-//     // For this simplified version, we'll look for:
-//     // 1. High motion levels
-//     // 2. Presence of people (skin tones)
-    
-//     const skinToneRatio = detectSkinTones(imageData);
-    
-//     // Fighting criteria:
-//     // - Significant motion (above 0.03 or 3% pixel change)
-//     // - Sufficient skin pixels visible (indicating people)
-//     const highMotion = motionLevel > 0.03;
-//     const peoplePresent = skinToneRatio > 0.1; // At least 10% skin pixels
-    
-//     const fightingLikelihood = highMotion && peoplePresent;
-    
-//     // Debug info
-//     if (highMotion && peoplePresent) {
-//       console.log(`Fighting detection: High motion (${(motionLevel * 100).toFixed(2)}%) + people detected (${(skinToneRatio * 100).toFixed(2)}% skin)`);
-//     }
-    
-//     return fightingLikelihood;
-//   };
   
 //   // Start background monitoring
 //   const startBackgroundMonitoring = async () => {
 //     try {
 //       // Reset the detection state
 //       setFireDetectionCount(0);
-//       setFightingDetectionCount(0);
-//       setActivityStatus("Normal");
+//       setFireDetected(false);
+//       setBlinking(false);
 //       setLastFrameData(null);
 //       setMotionLevel(0);
       
@@ -615,44 +561,11 @@
 //                 // Store current frame for next comparison
 //                 setLastFrameData(imageData);
                 
-//                 // First, check for fighting (priority detection)
-//                 const fightingDetected = detectFighting(imageData, lastFrameData, currentMotionLevel);
-                
-//                 // Then, check for fire, but only if not already detecting fighting
-//                 const fireDetected = !fightingDetected && detectFire(imageData);
+//                 // Check for fire
+//                 const fireDetected = detectFire(imageData);
                 
 //                 // Update Firebase based on detection
-//                 if (fightingDetected) {
-//                   // Increment fighting detection counter
-//                   setFightingDetectionCount(prev => {
-//                     const newCount = prev + 1;
-                    
-//                     // If we detect fighting for 3 consecutive frames, trigger the alert
-//                     if (newCount >= 3) {
-//                       // Update Firebase with status 2 for fighting/crowd
-//                       console.log("FIGHTING DETECTED! Updating Firebase...");
-//                       set(monitoringRef, {
-//                         status: 2,
-//                         message: 'Fighting detected',
-//                         timestamp: new Date().toISOString()
-//                       }).then(() => {
-//                         console.log("Firebase updated with fighting detection");
-//                         setActivityStatus("Fighting detected");
-//                         setUnusualActivityDetected(true);
-//                         setBlinking(true);
-                        
-//                         // Log to activity history
-//                         logUnusualActivity(2, 'Fighting detected');
-//                       }).catch(err => {
-//                         console.error("Error updating firebase:", err);
-//                       });
-//                     }
-                    
-//                     return newCount;
-//                   });
-//                   // Reset fire detection if fighting is detected
-//                   setFireDetectionCount(0);
-//                 } else if (fireDetected) {
+//                 if (fireDetected) {
 //                   // Increment fire detection counter
 //                   setFireDetectionCount(prev => {
 //                     const newCount = prev + 1;
@@ -661,18 +574,17 @@
 //                     if (newCount >= 2) {
 //                       // Update Firebase with status 1 for fire
 //                       console.log("FIRE DETECTED! Updating Firebase...");
+//                       const monitoringRef = ref(database, 'monitoring/unusualActivity');
+//                       const timestamp = new Date().toISOString();
+                      
 //                       set(monitoringRef, {
 //                         status: 1,
 //                         message: 'Fire detected',
-//                         timestamp: new Date().toISOString()
+//                         timestamp: timestamp
 //                       }).then(() => {
 //                         console.log("Firebase updated with fire detection");
-//                         setActivityStatus("Fire detected");
-//                         setUnusualActivityDetected(true);
+//                         setFireDetected(true);
 //                         setBlinking(true);
-                        
-//                         // Log to activity history
-//                         logUnusualActivity(1, 'Fire detected');
 //                       }).catch(err => {
 //                         console.error("Error updating firebase:", err);
 //                       });
@@ -680,12 +592,9 @@
                     
 //                     return newCount;
 //                   });
-//                   // Reset fighting detection if fire is detected
-//                   setFightingDetectionCount(0);
 //                 } else {
 //                   // Gradually decrease counters if nothing is detected
 //                   setFireDetectionCount(prev => Math.max(0, prev - 1));
-//                   setFightingDetectionCount(prev => Math.max(0, prev - 1));
 //                 }
 //               }
 //             } catch (error) {
@@ -719,9 +628,9 @@
 //     setMonitoringActive(false);
     
 //     // Reset detection states
-//     setActivityStatus("Normal");
+//     setFireDetected(false);
+//     setBlinking(false);
 //     setFireDetectionCount(0);
-//     setFightingDetectionCount(0);
 //     setLastFrameData(null);
 //     setMotionLevel(0);
     
@@ -734,12 +643,6 @@
 //     }).catch(err => {
 //       console.error("Error resetting firebase:", err);
 //     });
-    
-//     // Clear any auto-reset timeout
-//     if (alertTimeoutRef.current) {
-//       clearTimeout(alertTimeoutRef.current);
-//       alertTimeoutRef.current = null;
-//     }
 //   };
 
 //   // Find existing verification log for a booking
@@ -924,47 +827,20 @@
 //     const message = 'Fire detected';
     
 //     set(monitoringRef, {
-//       status: 1,
+//       status: 0,
 //       message: message,
 //       timestamp: timestamp
 //     }).then(() => {
 //       console.log("Firebase manually updated with fire detection");
-//       setActivityStatus("Fire detected");
-//       setUnusualActivityDetected(true);
+//       setFireDetected(true);
 //       setBlinking(true);
-      
-//       // Log to activity history
-//       logUnusualActivity(1, message);
 //     }).catch(err => {
 //       console.error("Error updating firebase:", err);
 //     });
 //   };
 
-//   // Manual force fighting detection (for testing)
-//   const forceFightingDetection = () => {
-//     const monitoringRef = ref(database, 'monitoring/unusualActivity');
-//     const timestamp = new Date().toISOString();
-//     const message = 'Fighting detected';
-    
-//     set(monitoringRef, {
-//       status: 2,
-//       message: message,
-//       timestamp: timestamp
-//     }).then(() => {
-//       console.log("Firebase manually updated with fighting detection");
-//       setActivityStatus("Fighting detected");
-//       setUnusualActivityDetected(true);
-//       setBlinking(true);
-      
-//       // Log to activity history
-//       logUnusualActivity(2, message);
-//     }).catch(err => {
-//       console.error("Error updating firebase:", err);
-//     });
-//   };
-
-//   // Manual reset of detection (for testing)
-//   const resetDetection = () => {
+//   // Manual reset of detection
+//   const resetFireDetection = () => {
 //     const monitoringRef = ref(database, 'monitoring/unusualActivity');
 //     const timestamp = new Date().toISOString();
     
@@ -974,51 +850,11 @@
 //       timestamp: timestamp
 //     }).then(() => {
 //       console.log("Firebase manually reset to normal");
-//       setActivityStatus("Normal");
-//       setUnusualActivityDetected(false);
+//       setFireDetected(false);
 //       setBlinking(false);
-      
-//       // Log the resolution to activity history
-//       // Get the most recent unresolved activity
-//       const historyRef = ref(database, 'monitoring/activityHistory');
-//       get(historyRef).then((snapshot) => {
-//         if (snapshot.exists()) {
-//           const activities = snapshot.val();
-          
-//           // Find the most recent unresolved activity
-//           let mostRecentId = null;
-//           let mostRecentTime = 0;
-          
-//           Object.entries(activities).forEach(([id, activity]) => {
-//             if (!activity.resolved) {
-//               const activityTime = new Date(activity.timestamp).getTime();
-//               if (activityTime > mostRecentTime) {
-//                 mostRecentId = id;
-//                 mostRecentTime = activityTime;
-//               }
-//             }
-//           });
-          
-//           // Update the activity as resolved
-//           if (mostRecentId) {
-//             const resolveRef = ref(database, `monitoring/activityHistory/${mostRecentId}`);
-//             update(resolveRef, {
-//               resolved: true,
-//               resolvedBy: "admin",
-//               resolvedAt: timestamp
-//             });
-//           }
-//         }
-//       });
 //     }).catch(err => {
 //       console.error("Error updating firebase:", err);
 //     });
-    
-//     // Clear any auto-reset timeout
-//     if (alertTimeoutRef.current) {
-//       clearTimeout(alertTimeoutRef.current);
-//       alertTimeoutRef.current = null;
-//     }
 //   };
 
 //   if (loading) {
@@ -1046,7 +882,11 @@
 //           <h3>Environment Monitoring</h3>
 //           <div className="monitoring-grid">
 //             {monitoringCards.map((card, index) => (
-//               <div key={index} className={`monitoring-card ${card.gradientClass}`}>
+//               <div key={index} className={`monitoring-card ${card.gradientClass}`} 
+//                    style={{animation: (card.title === 'Fire Detection' && stats.fireDetection === 'Fire detected') || 
+//                           (card.title === 'Unusual Activity' && stats.activityStatus === 1) ? 
+//                           'pulse-red 1s infinite alternate' : 'none'}}
+//               >
 //                 <div className="monitoring-icon">{card.icon}</div>
 //                 <div className="monitoring-info">
 //                   <h3 className="monitoring-title">{card.title}</h3>
@@ -1055,6 +895,17 @@
 //               </div>
 //             ))}
 //           </div>
+//           <style jsx>{`
+//             @keyframes pulse-red {
+//               from { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7); }
+//               to { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); }
+//             }
+            
+//             @keyframes blink {
+//               from { opacity: 1; }
+//               to { opacity: 0.7; }
+//             }
+//           `}</style>
           
 //           <div className="monitoring-controls">
 //             {monitoringActive ? (
@@ -1118,30 +969,11 @@
 //                   }}
 //                 >
 //                   <AlertTriangle size={20} />
-//                   <span style={{ marginLeft: '8px' }}>Test Fire (1)</span>
+//                   <span style={{ marginLeft: '8px' }}>Test Fire</span>
 //                 </button>
                 
 //                 <button 
-//                   onClick={forceFightingDetection}
-//                   style={{
-//                     padding: '8px 16px',
-//                     backgroundColor: '#9C27B0',
-//                     color: 'white',
-//                     border: 'none',
-//                     borderRadius: '4px',
-//                     display: 'inline-flex',
-//                     alignItems: 'center',
-//                     cursor: 'pointer',
-//                     marginRight: '10px',
-//                     fontWeight: '500'
-//                   }}
-//                 >
-//                   <Shield size={20} />
-//                   <span style={{ marginLeft: '8px' }}>Test Fighting (2)</span>
-//                 </button>
-                
-//                 <button 
-//                   onClick={resetDetection}
+//                   onClick={resetFireDetection}
 //                   style={{
 //                     padding: '8px 16px',
 //                     backgroundColor: '#2196F3',
@@ -1155,43 +987,33 @@
 //                   }}
 //                 >
 //                   <CheckCircle size={20} />
-//                   <span style={{ marginLeft: '8px' }}>Reset Alert (0)</span>
+//                   <span style={{ marginLeft: '8px' }}>Reset</span>
 //                 </button>
 //               </>
 //             )}
 //           </div>
           
-//           {unusualActivityDetected && (
+//           {fireDetected && (
 //             <div style={{ 
 //               marginTop: '15px',
 //               padding: '10px',
-//               backgroundColor: stats.activityStatus === 1 ? '#ffebee' : '#f3e5f5',
-//               border: `1px solid ${stats.activityStatus === 1 ? '#f44336' : '#9C27B0'}`,
+//               backgroundColor: blinking ? '#ffebee' : '#fff3e0',
+//               border: `1px solid ${blinking ? '#f44336' : '#ff9800'}`,
 //               borderRadius: '4px',
 //               textAlign: 'center',
-//               animation: 'blink 1s infinite alternate'
+//               animation: blinking ? 'blink 1s infinite alternate' : 'none'
 //             }}>
 //               <p style={{ 
 //                 margin: 0, 
-//                 color: stats.activityStatus === 1 ? '#d32f2f' : '#7B1FA2', 
+//                 color: blinking ? '#d32f2f' : '#e65100', 
 //                 fontWeight: 'bold',
 //                 display: 'flex',
 //                 alignItems: 'center',
 //                 justifyContent: 'center'
 //               }}>
-//                 {stats.activityStatus === 1 ? (
-//                   <AlertTriangle size={18} style={{ marginRight: '8px' }} />
-//                 ) : (
-//                   <Shield size={18} style={{ marginRight: '8px' }} />
-//                 )}
-//                 {stats.unusualActivity} (Status: {stats.activityStatus}) - Alert will auto-reset in 1 minute
+//                 <AlertTriangle size={18} style={{ marginRight: '8px' }} />
+//                 Fire detected! Please check the area.
 //               </p>
-//               <style jsx>{`
-//                 @keyframes blink {
-//                   from { opacity: 1; }
-//                   to { opacity: 0.7; }
-//                 }
-//               `}</style>
 //             </div>
 //           )}
           
@@ -1222,60 +1044,6 @@
 //                   }}
 //                 />
 //               </div>
-//               <div style={{ 
-//                 textAlign: 'center', 
-//                 margin: '10px 0 0 0',
-//                 padding: '5px',
-//                 borderRadius: '4px',
-//                 backgroundColor: '#e0e0e0'
-//               }}>
-//                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-//                   <p style={{ 
-//                     margin: '0 10px 0 0',
-//                     fontWeight: '500'
-//                   }}>
-//                     Activity Status:
-//                   </p>
-//                   <div style={{
-//                     width: '40px',
-//                     height: '40px',
-//                     display: 'flex',
-//                     justifyContent: 'center',
-//                     alignItems: 'center',
-//                     borderRadius: '50%',
-//                     backgroundColor: stats.activityStatus === 0 
-//                       ? '#4CAF50' 
-//                       : stats.activityStatus === 1 
-//                         ? '#f44336' 
-//                         : '#9C27B0',
-//                     color: 'white',
-//                     fontWeight: 'bold',
-//                     fontSize: '20px',
-//                     boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-//                     animation: stats.activityStatus > 0 ? 'blink 0.5s infinite alternate' : 'none'
-//                   }}>
-//                     {stats.activityStatus}
-//                   </div>
-//                 </div>
-//                 <p style={{ 
-//                   margin: '5px 0 0 0',
-//                   fontWeight: '500',
-//                   fontSize: '14px',
-//                   color: '#757575'
-//                 }}>
-//                   {stats.activityStatus === 0 
-//                     ? 'Normal' 
-//                     : stats.activityStatus === 1 
-//                       ? 'Fire Detected' 
-//                       : 'Fighting Detected'}
-//                 </p>
-//               </div>
-//               <style jsx>{`
-//                 @keyframes blink {
-//                   from { opacity: 1; }
-//                   to { opacity: 0.5; }
-//                 }
-//               `}</style>
 //             </div>
 //           </div>
           
@@ -1436,6 +1204,15 @@
 //                           className="check-in-button"
 //                           onClick={() => handleCheckIn(booking)}
 //                           disabled={booking.checkedIn && verStatus === 1}
+//                           style={{
+//                             padding: '6px 12px',
+//                             backgroundColor: booking.checkedIn && verStatus === 1 ? '#4CAF50' : '#2196F3',
+//                             color: 'white',
+//                             border: 'none',
+//                             borderRadius: '4px',
+//                             cursor: booking.checkedIn && verStatus === 1 ? 'default' : 'pointer',
+//                             opacity: booking.checkedIn && verStatus === 1 ? 0.7 : 1
+//                           }}
 //                         >
 //                           {booking.checkedIn && verStatus === 1 ? 'Checked In' : 'Check In'}
 //                         </button>
@@ -1452,36 +1229,103 @@
 //       </div>
       
 //       {showCamera && (
-//         <div className="camera-modal-overlay">
-//           <div className="camera-modal">
-//             <div className="camera-modal-header">
-//               <h3>Check-In Verification</h3>
-//               <button className="close-button" onClick={stopCamera}>
+//         <div className="camera-modal-overlay" style={{
+//           position: 'fixed',
+//           top: 0,
+//           left: 0,
+//           width: '100%',
+//           height: '100%',
+//           backgroundColor: 'rgba(0, 0, 0, 0.7)',
+//           display: 'flex',
+//           justifyContent: 'center',
+//           alignItems: 'center',
+//           zIndex: 1000
+//         }}>
+//           <div className="camera-modal" style={{
+//             backgroundColor: '#fff',
+//             borderRadius: '8px',
+//             padding: '20px',
+//             maxWidth: '90%',
+//             width: '500px',
+//             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
+//           }}>
+//             <div className="camera-modal-header" style={{
+//               display: 'flex',
+//               justifyContent: 'space-between',
+//               alignItems: 'center',
+//               marginBottom: '15px'
+//             }}>
+//               <h3 style={{ margin: 0 }}>Check-In Verification</h3>
+//               <button 
+//                 className="close-button" 
+//                 onClick={stopCamera}
+//                 style={{
+//                   background: 'none',
+//                   border: 'none',
+//                   cursor: 'pointer',
+//                   fontSize: '20px'
+//                 }}
+//               >
 //                 <X size={24} />
 //               </button>
 //             </div>
             
-//             <div className="camera-container">
+//             <div className="camera-container" style={{
+//               position: 'relative',
+//               width: '100%',
+//               backgroundColor: '#000',
+//               borderRadius: '4px',
+//               overflow: 'hidden',
+//               marginBottom: '20px'
+//             }}>
 //               <video 
 //                 ref={videoRef}
 //                 autoPlay
 //                 playsInline
 //                 muted
 //                 className="camera-video"
+//                 style={{
+//                   width: '100%',
+//                   display: 'block'
+//                 }}
 //               />
 //               <canvas ref={canvasRef} style={{ display: 'none' }} />
               
 //               {verified === true && (
-//                 <div className="verification-result success">
+//                 <div className="verification-result success" style={{
+//                   position: 'absolute',
+//                   top: 0,
+//                   left: 0,
+//                   width: '100%',
+//                   height: '100%',
+//                   backgroundColor: 'rgba(76, 175, 80, 0.7)',
+//                   display: 'flex',
+//                   flexDirection: 'column',
+//                   justifyContent: 'center',
+//                   alignItems: 'center',
+//                   color: 'white'
+//                 }}>
 //                   <CheckCircle size={64} />
-//                   <p>Identity Verified!</p>
+//                   <p style={{ fontSize: '20px', fontWeight: 'bold', marginTop: '10px' }}>Identity Verified!</p>
 //                 </div>
 //               )}
               
 //               {verified === false && (
-//                 <div className="verification-result failure">
+//                 <div className="verification-result failure" style={{
+//                   position: 'absolute',
+//                   top: 0,
+//                   left: 0,
+//                   width: '100%',
+//                   height: '100%',
+//                   backgroundColor: 'rgba(244, 67, 54, 0.7)',
+//                   display: 'flex',
+//                   flexDirection: 'column',
+//                   justifyContent: 'center',
+//                   alignItems: 'center',
+//                   color: 'white'
+//                 }}>
 //                   <XCircle size={64} />
-//                   <p>Identity Verification Failed</p>
+//                   <p style={{ fontSize: '20px', fontWeight: 'bold', marginTop: '10px' }}>Identity Verification Failed</p>
 //                 </div>
 //               )}
 //             </div>
@@ -1491,6 +1335,22 @@
 //                 <button 
 //                   className="capture-button"
 //                   onClick={captureImage}
+//                   style={{
+//                     padding: '12px 24px',
+//                     backgroundColor: '#4CAF50',
+//                     color: 'white',
+//                     border: 'none',
+//                     borderRadius: '4px', 
+//                     display: 'flex',
+//                     alignItems: 'center',
+//                     justifyContent: 'center',
+//                     gap: '10px',
+//                     fontSize: '16px',
+//                     fontWeight: 'bold',
+//                     cursor: 'pointer',
+//                     boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+//                     margin: '0 auto'
+//                   }}
 //                 >
 //                   <Camera size={24} />
 //                   <span>Capture Image</span>
@@ -1498,9 +1358,25 @@
 //               )}
               
 //               {comparing && (
-//                 <div className="comparing-indicator">
-//                   <p>Comparing images...</p>
-//                   <div className="loading-spinner"></div>
+//                 <div className="comparing-indicator" style={{
+//                   textAlign: 'center',
+//                   marginTop: '10px'
+//                 }}>
+//                   <p style={{ marginBottom: '10px' }}>Comparing images...</p>
+//                   <div className="loading-spinner" style={{
+//                     display: 'inline-block',
+//                     width: '30px',
+//                     height: '30px',
+//                     border: '3px solid rgba(0, 0, 0, 0.1)',
+//                     borderRadius: '50%',
+//                     borderTopColor: '#2196F3',
+//                     animation: 'spin 1s ease-in-out infinite'
+//                   }}></div>
+//                   <style jsx>{`
+//                     @keyframes spin {
+//                       to { transform: rotate(360deg); }
+//                     }
+//                   `}</style>
 //                 </div>
 //               )}
               
@@ -1508,6 +1384,17 @@
 //                 <button 
 //                   className="retry-button"
 //                   onClick={() => setVerified(null)}
+//                   style={{
+//                     padding: '10px 20px',
+//                     backgroundColor: '#2196F3',
+//                     color: 'white',
+//                     border: 'none',
+//                     borderRadius: '4px',
+//                     cursor: 'pointer',
+//                     fontWeight: 'bold',
+//                     display: 'block',
+//                     margin: '10px auto 0'
+//                   }}
 //                 >
 //                   Try Again
 //                 </button>
@@ -1567,6 +1454,7 @@
 
 
 
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ref, onValue, update, get, set, push } from 'firebase/database';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -1589,8 +1477,8 @@ const AdminDashboard = () => {
     alcoholDetection: 'No detection',
     gasDetection: 'No detection',
     fireDetection: 'No detection',
-    unusualActivity: 'None',
-    activityStatus: 0 // Numeric status: 0=normal, 1=fire, 2=crowd/fighting
+    unusualActivity: 'Normal',
+    activityStatus: 0 // Numeric status: 0=normal, 1=fire
   });
   const [loading, setLoading] = useState(true);
   const [showCamera, setShowCamera] = useState(false);
@@ -1599,15 +1487,15 @@ const AdminDashboard = () => {
   const [verified, setVerified] = useState(null);
   const [verificationStatus, setVerificationStatus] = useState(0); // 0=not verified/no activity, 1=verified
   const [monitoringActive, setMonitoringActive] = useState(false);
-  const [unusualActivityDetected, setUnusualActivityDetected] = useState(false);
+  const [fireDetected, setFireDetected] = useState(false);
   const [blinking, setBlinking] = useState(false);
-  const [activityStatus, setActivityStatus] = useState("Normal");
   const [fireDetectionCount, setFireDetectionCount] = useState(0);
-  const [fightingDetectionCount, setFightingDetectionCount] = useState(0);
   const [lastFrameData, setLastFrameData] = useState(null);
   const [motionLevel, setMotionLevel] = useState(0);
   const [verificationLogs, setVerificationLogs] = useState([]);
   const [showVerificationLogs, setShowVerificationLogs] = useState(false);
+  const [monitoringFrameCount, setMonitoringFrameCount] = useState(0);
+  const [calibrationCompleted, setCalibrationCompleted] = useState(false);
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -1617,8 +1505,27 @@ const AdminDashboard = () => {
   const monitoringCanvasRef = useRef(null);
   const monitoringIntervalRef = useRef(null);
   const analysisIntervalRef = useRef(null);
-  const alertTimeoutRef = useRef(null);
   const motionCanvasRef = useRef(null);
+
+  // Effect to reset Firebase data on component mount
+  useEffect(() => {
+    // Reset Firebase data when component mounts to ensure we start with a clean state
+    const resetFirebaseData = async () => {
+      try {
+        const monitoringRef = ref(database, 'monitoring/unusualActivity');
+        await set(monitoringRef, {
+          status: 0,
+          message: 'Normal',
+          timestamp: new Date().toISOString()
+        });
+        console.log("Firebase reset to normal state on component mount");
+      } catch (error) {
+        console.error("Error resetting Firebase data:", error);
+      }
+    };
+    
+    resetFirebaseData();
+  }, []);
 
   // Check and reset alert state on component mount and unmount
   useEffect(() => {
@@ -1631,7 +1538,7 @@ const AdminDashboard = () => {
         if (snapshot.exists()) {
           const data = snapshot.val();
           
-          if (data.status > 0) { // If status is 1 or 2 (fire or crowd)
+          if (data.status > 0) { // If status is 1 (fire)
             // Check if the alert is older than 1 minute
             const alertTime = new Date(data.timestamp);
             const currentTime = new Date();
@@ -1654,10 +1561,16 @@ const AdminDashboard = () => {
     
     checkAndResetAlert();
     
-    // Cleanup function to reset alert state when component unmounts
+    // Cleanup function when component unmounts
     return () => {
-      if (alertTimeoutRef.current) {
-        clearTimeout(alertTimeoutRef.current);
+      if (monitoringStreamRef.current) {
+        monitoringStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (monitoringIntervalRef.current) {
+        clearInterval(monitoringIntervalRef.current);
+      }
+      if (analysisIntervalRef.current) {
+        clearInterval(analysisIntervalRef.current);
       }
       
       // Reset Firebase alert state on unmount to prevent persisting alerts
@@ -1736,41 +1649,12 @@ const AdminDashboard = () => {
             unusualActivity: activityData.message || 'Normal'
           }));
           
-          if (statusCode > 0) { // If status is 1 or 2
-            setUnusualActivityDetected(true);
+          if (statusCode === 1) { // Fire detected
+            setFireDetected(true);
             setBlinking(true);
-            
-            if (statusCode === 1) {
-              setActivityStatus("Fire detected");
-            } else if (statusCode === 2) {
-              setActivityStatus("Fighting detected");
-            }
-            
-            // Set a timeout to automatically reset the alert after 1 minute (60 seconds)
-            if (alertTimeoutRef.current) {
-              clearTimeout(alertTimeoutRef.current);
-            }
-            
-            alertTimeoutRef.current = setTimeout(async () => {
-              console.log("Auto-resetting alert after 1 minute");
-              const monitoringRef = ref(database, 'monitoring/unusualActivity');
-              await set(monitoringRef, {
-                status: 0,
-                message: 'Normal',
-                timestamp: new Date().toISOString()
-              });
-              alertTimeoutRef.current = null;
-            }, 60000); // 60 seconds = 1 minute
           } else {
-            setUnusualActivityDetected(false);
+            setFireDetected(false);
             setBlinking(false);
-            setActivityStatus("Normal");
-            
-            // Clear any existing auto-reset timeout
-            if (alertTimeoutRef.current) {
-              clearTimeout(alertTimeoutRef.current);
-              alertTimeoutRef.current = null;
-            }
           }
         }
       });
@@ -1829,6 +1713,19 @@ const AdminDashboard = () => {
     
     fetchStats();
   }, []);
+
+  // Effect for blinking
+  useEffect(() => {
+    let blinkInterval;
+    if (blinking) {
+      blinkInterval = setInterval(() => {
+        setBlinking(prev => !prev);
+      }, 500);
+    }
+    return () => {
+      if (blinkInterval) clearInterval(blinkInterval);
+    };
+  }, [blinking]);
 
   // Initialize verification logs for all bookings
   const initializeVerificationLogs = async (bookings) => {
@@ -1901,19 +1798,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // Effect for blinking
-  useEffect(() => {
-    let blinkInterval;
-    if (blinking) {
-      blinkInterval = setInterval(() => {
-        setBlinking(prev => !prev);
-      }, 500);
-    }
-    return () => {
-      if (blinkInterval) clearInterval(blinkInterval);
-    };
-  }, [blinking]);
-
   // Clean up camera resources
   useEffect(() => {
     return () => {
@@ -1928,9 +1812,6 @@ const AdminDashboard = () => {
       }
       if (analysisIntervalRef.current) {
         clearInterval(analysisIntervalRef.current);
-      }
-      if (alertTimeoutRef.current) {
-        clearTimeout(alertTimeoutRef.current);
       }
     };
   }, []);
@@ -1962,49 +1843,32 @@ const AdminDashboard = () => {
   const statCards = [
     { title: 'Total Users', value: stats.totalUsers, icon: <Users size={24} />, color: 'blue' },
     { title: 'Total Bookings', value: stats.totalBookings, icon: <Calendar size={24} />, color: 'green' },
-    { title: 'Pending Payments', value: stats.pendingPayments, icon: <DollarSign size={24} />, color: 'orange' },
-    { title: 'Completed Payments', value: stats.completedPayments, icon: <Ticket size={24} />, color: 'purple' }
+    // { title: 'Pending Payments', value: stats.pendingPayments, icon: <DollarSign size={24} />, color: 'orange' },
+    // { title: 'Completed Payments', value: stats.completedPayments, icon: <Ticket size={24} />, color: 'purple' }
   ];
 
   // Monitoring cards
   const monitoringCards = [
     { title: 'Alcohol Detection', value: stats.alcoholDetection, icon: <Wine size={24} />, gradientClass: 'gradient-red' },
     { title: 'Gas Detection', value: stats.gasDetection, icon: <Wind size={24} />, gradientClass: 'gradient-gas' },
-    { title: 'Fire Detection', value: stats.fireDetection, icon: <AlertTriangle size={24} />, gradientClass: 'gradient-fire' },
+    { title: 'Fire Detection', value: stats.fireDetection, icon: <AlertTriangle size={24} />, gradientClass: fireDetected && blinking ? 'gradient-fire-blink' : 'gradient-fire' },
     { title: 'Temperature', value: `${stats.temperature}°C`, icon: <Thermometer size={24} />, gradientClass: 'gradient-orange' },
     { title: 'Humidity', value: `${stats.humidity}%`, icon: <Droplets size={24} />, gradientClass: 'gradient-blue' },
     { 
       title: 'Unusual Activity', 
-      value: stats.activityStatus, 
+      value: stats.activityStatus === 0 ? 'Normal' : 'Fire detected', 
       icon: <AlertTriangle size={24} />, 
-      gradientClass: unusualActivityDetected ? (blinking ? 'gradient-alert-blink' : 'gradient-alert') : 'gradient-purple' 
+      gradientClass: fireDetected && blinking ? 'gradient-alert-blink' : 'gradient-purple' 
     }
   ];
 
-  // Log unusual activity to history
-  const logUnusualActivity = async (status, message) => {
-    try {
-      const activityId = `activity_${Date.now()}`;
-      const timestamp = new Date().toISOString();
-      
-      // Log to activity history
-      const historyRef = ref(database, `monitoring/activityHistory/${activityId}`);
-      await set(historyRef, {
-        status: status, // 0=normal, 1=fire, 2=fighting
-        message: message,
-        timestamp: timestamp,
-        location: "Main Stadium",
-        resolved: false
-      });
-      
-      console.log(`Activity logged to history: ${message} (Status: ${status})`);
-    } catch (error) {
-      console.error('Error logging activity:', error);
-    }
-  };
-
-  // Enhanced fire detection algorithm
+  // Enhanced fire detection algorithm with higher threshold to prevent false positives
   const detectFire = (imageData) => {
+    // Skip first few frames to allow camera to stabilize
+    if (monitoringFrameCount < 10) {
+      return false;
+    }
+    
     const data = imageData.data;
     let firePixelCount = 0;
     let brightYellowCount = 0;
@@ -2016,19 +1880,18 @@ const AdminDashboard = () => {
       const g = data[i + 1];
       const b = data[i + 2];
       
-      // Check for fire-red/orange pixels (high red, medium green, low blue)
-      // More specific color detection to avoid false positives
-      if (r > 220 && g > 50 && g < 140 && b < 50 && r > g + 100 && r > b + 150) {
+      // More stringent fire-red/orange pixels detection to avoid false positives
+      if (r > 230 && g > 50 && g < 140 && b < 40 && r > g + 120 && r > b + 170) {
         firePixelCount++;
       }
       
-      // Check for flame-yellow pixels (high red, high green, low blue)
-      if (r > 220 && g > 180 && b < 100 && r > b + 120 && g > b + 120) {
+      // More stringent flame-yellow pixels detection
+      if (r > 230 && g > 190 && b < 90 && r > b + 130 && g > b + 130) {
         brightYellowCount++;
       }
       
-      // Check for bright white center of flame (all high values)
-      if (r > 240 && g > 240 && b > 220) {
+      // More stringent bright white center of flame detection
+      if (r > 245 && g > 245 && b > 230) {
         brightWhiteCount++;
       }
     }
@@ -2040,11 +1903,13 @@ const AdminDashboard = () => {
     const totalPixels = imageData.width * imageData.height;
     const fireRatio = totalFirePixels / totalPixels;
     
-    // Debug information
-    console.log(`Fire detection: ${fireRatio.toFixed(4)} (${firePixelCount} fire pixels, ${brightYellowCount} yellow, ${brightWhiteCount} white)`);
+    // Only log if we detect something significant to reduce console noise
+    if (fireRatio > 0.001) {
+      console.log(`Fire detection: ${fireRatio.toFixed(4)} (${firePixelCount} fire pixels, ${brightYellowCount} yellow, ${brightWhiteCount} white)`);
+    }
     
-    // More stringent threshold to avoid false positives on fighting scenes
-    return fireRatio > 0.005;
+    // Higher threshold to avoid false positives (0.01 = 1% of pixels)
+    return fireRatio > 0.01;
   };
 
   // Calculate motion level between two frames
@@ -2076,77 +1941,17 @@ const AdminDashboard = () => {
     
     return motionRatio;
   };
-
-  // Detect skin tones (for human detection)
-  const detectSkinTones = (imageData) => {
-    const data = imageData.data;
-    let skinTonePixels = 0;
-    
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i];
-      const g = data[i+1];
-      const b = data[i+2];
-      
-      // Simple skin tone detection (various skin tones)
-      // Covers a range from lighter to darker skin colors
-      if (
-        // Lighter skin tones
-        (r > 180 && g > 140 && g < 200 && b > 100 && b < 170 && 
-         r > g && r > b && g > b) ||
-        // Medium skin tones
-        (r > 150 && g > 100 && g < 170 && b > 70 && b < 140 && 
-         r > g && r > b) ||
-        // Darker skin tones
-        (r > 100 && r < 150 && g > 60 && g < 120 && b > 40 && b < 90 && 
-         r > g && r > b)
-      ) {
-        skinTonePixels++;
-      }
-    }
-    
-    const totalPixels = imageData.width * imageData.height;
-    const skinRatio = skinTonePixels / totalPixels;
-    
-    // Debug info
-    console.log(`Skin tone detection: ${(skinRatio * 100).toFixed(2)}% skin pixels`);
-    
-    return skinRatio;
-  };
-
-  // Detect fighting/crowding by combining motion and skin tone detection
-  const detectFighting = (imageData, previousFrameData, motionLevel) => {
-    // In real fight detection, we'd analyze motion patterns, postures, etc.
-    // For this simplified version, we'll look for:
-    // 1. High motion levels
-    // 2. Presence of people (skin tones)
-    
-    const skinToneRatio = detectSkinTones(imageData);
-    
-    // Fighting criteria:
-    // - Significant motion (above 0.03 or 3% pixel change)
-    // - Sufficient skin pixels visible (indicating people)
-    const highMotion = motionLevel > 0.03;
-    const peoplePresent = skinToneRatio > 0.1; // At least 10% skin pixels
-    
-    const fightingLikelihood = highMotion && peoplePresent;
-    
-    // Debug info
-    if (highMotion && peoplePresent) {
-      console.log(`Fighting detection: High motion (${(motionLevel * 100).toFixed(2)}%) + people detected (${(skinToneRatio * 100).toFixed(2)}% skin)`);
-    }
-    
-    return fightingLikelihood;
-  };
   
   // Start background monitoring
   const startBackgroundMonitoring = async () => {
     try {
       // Reset the detection state
       setFireDetectionCount(0);
-      setFightingDetectionCount(0);
-      setActivityStatus("Normal");
+      setFireDetected(false);
+      setBlinking(false);
       setLastFrameData(null);
       setMotionLevel(0);
+      setMonitoringFrameCount(0);
       
       // Always ensure we're starting with a clean state in Firebase
       const monitoringRef = ref(database, 'monitoring/unusualActivity');
@@ -2170,6 +1975,7 @@ const AdminDashboard = () => {
       }
       
       // Using setTimeout to ensure the video element is properly initialized
+      // and to give the camera time to adjust to lighting conditions
       setTimeout(() => {
         // Try-catch block specifically for canvas operations
         try {
@@ -2195,6 +2001,9 @@ const AdminDashboard = () => {
           monitoringIntervalRef.current = setInterval(() => {
             try {
               if (monitoringVideoRef.current && monitoringVideoRef.current.readyState === 4) {
+                // Increment frame counter (used to ignore first few frames)
+                setMonitoringFrameCount(prev => prev + 1);
+                
                 // Draw current frame to main canvas
                 context.drawImage(monitoringVideoRef.current, 0, 0, canvas.width, canvas.height);
                 
@@ -2237,77 +2046,44 @@ const AdminDashboard = () => {
                 // Store current frame for next comparison
                 setLastFrameData(imageData);
                 
-                // First, check for fighting (priority detection)
-                const fightingDetected = detectFighting(imageData, lastFrameData, currentMotionLevel);
-                
-                // Then, check for fire, but only if not already detecting fighting
-                const fireDetected = !fightingDetected && detectFire(imageData);
-                
-                // Update Firebase based on detection
-                if (fightingDetected) {
-                  // Increment fighting detection counter
-                  setFightingDetectionCount(prev => {
-                    const newCount = prev + 1;
-                    
-                    // If we detect fighting for 3 consecutive frames, trigger the alert
-                    if (newCount >= 3) {
-                      // Update Firebase with status 2 for fighting/crowd
-                      console.log("FIGHTING DETECTED! Updating Firebase...");
-                      set(monitoringRef, {
-                        status: 2,
-                        message: 'Fighting detected',
-                        timestamp: new Date().toISOString()
-                      }).then(() => {
-                        console.log("Firebase updated with fighting detection");
-                        setActivityStatus("Fighting detected");
-                        setUnusualActivityDetected(true);
-                        setBlinking(true);
+                // Skip fire detection for the first few seconds to allow camera to adjust
+                if (monitoringFrameCount > 15) {
+                  // Check for fire with more stringent criteria
+                  const fireDetected = detectFire(imageData);
+                  
+                  // Update Firebase based on detection
+                  if (fireDetected) {
+                    // Increment fire detection counter
+                    setFireDetectionCount(prev => {
+                      const newCount = prev + 1;
+                      
+                      // Require more consecutive positive detections (5 instead of 2)
+                      // This helps eliminate false positives
+                      if (newCount >= 5) {
+                        // Update Firebase with status 1 for fire
+                        console.log("FIRE DETECTED! Updating Firebase...");
+                        const monitoringRef = ref(database, 'monitoring/unusualActivity');
+                        const timestamp = new Date().toISOString();
                         
-                        // Log to activity history
-                        logUnusualActivity(2, 'Fighting detected');
-                      }).catch(err => {
-                        console.error("Error updating firebase:", err);
-                      });
-                    }
-                    
-                    return newCount;
-                  });
-                  // Reset fire detection if fighting is detected
-                  setFireDetectionCount(0);
-                } else if (fireDetected) {
-                  // Increment fire detection counter
-                  setFireDetectionCount(prev => {
-                    const newCount = prev + 1;
-                    
-                    // If we detect fire for 2 consecutive frames, trigger the alert
-                    if (newCount >= 2) {
-                      // Update Firebase with status 1 for fire
-                      console.log("FIRE DETECTED! Updating Firebase...");
-                      set(monitoringRef, {
-                        status: 1,
-                        message: 'Fire detected',
-                        timestamp: new Date().toISOString()
-                      }).then(() => {
-                        console.log("Firebase updated with fire detection");
-                        setActivityStatus("Fire detected");
-                        setUnusualActivityDetected(true);
-                        setBlinking(true);
-                        
-                        // Log to activity history
-                        logUnusualActivity(1, 'Fire detected');
-                      }).catch(err => {
-                        console.error("Error updating firebase:", err);
-                      });
-                    }
-                    
-                    return newCount;
-                  });
-                  // Reset fighting detection if fire is detected
-                  setFightingDetectionCount(0);
-                } else {
-                  // Gradually decrease counters if nothing is detected
-                  setFireDetectionCount(prev => Math.max(0, prev - 1));
-                  setFightingDetectionCount(prev => Math.max(0, prev - 1));
+                        set(monitoringRef, {
+                          status: 1,
+                          message: 'Fire detected',
+                          timestamp: timestamp
+                        }).then(() => {
+                          console.log("Firebase updated with fire detection");
+                          setFireDetected(true);
+                          setBlinking(true);
+                        }).catch(err => {
+                          console.error("Error updating firebase:", err);
+                        });
+                      }
+                      
+                      return newCount;
+                    });
+                  } else {
+                    // Gradually decrease counters if nothing is detected
+                    setFireDetectionCount(prev => Math.max(0, prev - 1));
+                  }
                 }
               }
             } catch (error) {
@@ -2320,7 +2096,7 @@ const AdminDashboard = () => {
           console.error("Canvas initialization error:", canvasError);
           alert('Error initializing monitoring canvas. Please try again.');
         }
-      }, 500); // Small delay to ensure video element is properly initialized
+      }, 1000); // Longer delay (1 second) to ensure video element is properly initialized and adjusted
     } catch (error) {
       console.error('Error starting background monitoring:', error);
       alert('Unable to start background monitoring. Please check camera permissions.');
@@ -2341,9 +2117,9 @@ const AdminDashboard = () => {
     setMonitoringActive(false);
     
     // Reset detection states
-    setActivityStatus("Normal");
+    setFireDetected(false);
+    setBlinking(false);
     setFireDetectionCount(0);
-    setFightingDetectionCount(0);
     setLastFrameData(null);
     setMotionLevel(0);
     
@@ -2356,12 +2132,6 @@ const AdminDashboard = () => {
     }).catch(err => {
       console.error("Error resetting firebase:", err);
     });
-    
-    // Clear any auto-reset timeout
-    if (alertTimeoutRef.current) {
-      clearTimeout(alertTimeoutRef.current);
-      alertTimeoutRef.current = null;
-    }
   };
 
   // Find existing verification log for a booking
@@ -2551,42 +2321,15 @@ const AdminDashboard = () => {
       timestamp: timestamp
     }).then(() => {
       console.log("Firebase manually updated with fire detection");
-      setActivityStatus("Fire detected");
-      setUnusualActivityDetected(true);
+      setFireDetected(true);
       setBlinking(true);
-      
-      // Log to activity history
-      logUnusualActivity(1, message);
     }).catch(err => {
       console.error("Error updating firebase:", err);
     });
   };
 
-  // Manual force fighting detection (for testing)
-  const forceFightingDetection = () => {
-    const monitoringRef = ref(database, 'monitoring/unusualActivity');
-    const timestamp = new Date().toISOString();
-    const message = 'Fighting detected';
-    
-    set(monitoringRef, {
-      status: 2,
-      message: message,
-      timestamp: timestamp
-    }).then(() => {
-      console.log("Firebase manually updated with fighting detection");
-      setActivityStatus("Fighting detected");
-      setUnusualActivityDetected(true);
-      setBlinking(true);
-      
-      // Log to activity history
-      logUnusualActivity(2, message);
-    }).catch(err => {
-      console.error("Error updating firebase:", err);
-    });
-  };
-
-  // Manual reset of detection (for testing)
-  const resetDetection = () => {
+  // Manual reset of detection
+  const resetFireDetection = () => {
     const monitoringRef = ref(database, 'monitoring/unusualActivity');
     const timestamp = new Date().toISOString();
     
@@ -2596,51 +2339,11 @@ const AdminDashboard = () => {
       timestamp: timestamp
     }).then(() => {
       console.log("Firebase manually reset to normal");
-      setActivityStatus("Normal");
-      setUnusualActivityDetected(false);
+      setFireDetected(false);
       setBlinking(false);
-      
-      // Log the resolution to activity history
-      // Get the most recent unresolved activity
-      const historyRef = ref(database, 'monitoring/activityHistory');
-      get(historyRef).then((snapshot) => {
-        if (snapshot.exists()) {
-          const activities = snapshot.val();
-          
-          // Find the most recent unresolved activity
-          let mostRecentId = null;
-          let mostRecentTime = 0;
-          
-          Object.entries(activities).forEach(([id, activity]) => {
-            if (!activity.resolved) {
-              const activityTime = new Date(activity.timestamp).getTime();
-              if (activityTime > mostRecentTime) {
-                mostRecentId = id;
-                mostRecentTime = activityTime;
-              }
-            }
-          });
-          
-          // Update the activity as resolved
-          if (mostRecentId) {
-            const resolveRef = ref(database, `monitoring/activityHistory/${mostRecentId}`);
-            update(resolveRef, {
-              resolved: true,
-              resolvedBy: "admin",
-              resolvedAt: timestamp
-            });
-          }
-        }
-      });
     }).catch(err => {
       console.error("Error updating firebase:", err);
     });
-    
-    // Clear any auto-reset timeout
-    if (alertTimeoutRef.current) {
-      clearTimeout(alertTimeoutRef.current);
-      alertTimeoutRef.current = null;
-    }
   };
 
   if (loading) {
@@ -2668,7 +2371,11 @@ const AdminDashboard = () => {
           <h3>Environment Monitoring</h3>
           <div className="monitoring-grid">
             {monitoringCards.map((card, index) => (
-              <div key={index} className={`monitoring-card ${card.gradientClass}`}>
+              <div key={index} className={`monitoring-card ${card.gradientClass}`} 
+                   style={{animation: (card.title === 'Fire Detection' && stats.fireDetection === 'Fire detected') || 
+                          (card.title === 'Unusual Activity' && stats.activityStatus === 1) ? 
+                          'pulse-red 1s infinite alternate' : 'none'}}
+              >
                 <div className="monitoring-icon">{card.icon}</div>
                 <div className="monitoring-info">
                   <h3 className="monitoring-title">{card.title}</h3>
@@ -2677,6 +2384,17 @@ const AdminDashboard = () => {
               </div>
             ))}
           </div>
+          <style jsx>{`
+            @keyframes pulse-red {
+              from { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7); }
+              to { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); }
+            }
+            
+            @keyframes blink {
+              from { opacity: 1; }
+              to { opacity: 0.7; }
+            }
+          `}</style>
           
           <div className="monitoring-controls">
             {monitoringActive ? (
@@ -2740,30 +2458,11 @@ const AdminDashboard = () => {
                   }}
                 >
                   <AlertTriangle size={20} />
-                  <span style={{ marginLeft: '8px' }}>Test Fire (1)</span>
+                  <span style={{ marginLeft: '8px' }}>Test Fire</span>
                 </button>
                 
                 <button 
-                  onClick={forceFightingDetection}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: '#9C27B0',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    marginRight: '10px',
-                    fontWeight: '500'
-                  }}
-                >
-                  <Shield size={20} />
-                  <span style={{ marginLeft: '8px' }}>Test Fighting (2)</span>
-                </button>
-                
-                <button 
-                  onClick={resetDetection}
+                  onClick={resetFireDetection}
                   style={{
                     padding: '8px 16px',
                     backgroundColor: '#2196F3',
@@ -2777,43 +2476,57 @@ const AdminDashboard = () => {
                   }}
                 >
                   <CheckCircle size={20} />
-                  <span style={{ marginLeft: '8px' }}>Reset Alert (0)</span>
+                  <span style={{ marginLeft: '8px' }}>Reset</span>
                 </button>
               </>
             )}
           </div>
           
-          {unusualActivityDetected && (
+          {/* Calibration message when monitoring just started */}
+          {monitoringActive && monitoringFrameCount < 15 && (
             <div style={{ 
               marginTop: '15px',
               padding: '10px',
-              backgroundColor: stats.activityStatus === 1 ? '#ffebee' : '#f3e5f5',
-              border: `1px solid ${stats.activityStatus === 1 ? '#f44336' : '#9C27B0'}`,
+              backgroundColor: '#e3f2fd',
+              border: '1px solid #2196F3',
               borderRadius: '4px',
-              textAlign: 'center',
-              animation: 'blink 1s infinite alternate'
+              textAlign: 'center'
             }}>
               <p style={{ 
                 margin: 0, 
-                color: stats.activityStatus === 1 ? '#d32f2f' : '#7B1FA2', 
+                color: '#0d47a1', 
                 fontWeight: 'bold',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                {stats.activityStatus === 1 ? (
-                  <AlertTriangle size={18} style={{ marginRight: '8px' }} />
-                ) : (
-                  <Shield size={18} style={{ marginRight: '8px' }} />
-                )}
-                {stats.unusualActivity} (Status: {stats.activityStatus}) - Alert will auto-reset in 1 minute
+                <span style={{ marginRight: '8px' }}>⚙️</span>
+                Calibrating camera... Please wait...
               </p>
-              <style jsx>{`
-                @keyframes blink {
-                  from { opacity: 1; }
-                  to { opacity: 0.7; }
-                }
-              `}</style>
+            </div>
+          )}
+          
+          {fireDetected && (
+            <div style={{ 
+              marginTop: '15px',
+              padding: '10px',
+              backgroundColor: blinking ? '#ffebee' : '#fff3e0',
+              border: `1px solid ${blinking ? '#f44336' : '#ff9800'}`,
+              borderRadius: '4px',
+              textAlign: 'center',
+              animation: blinking ? 'blink 1s infinite alternate' : 'none'
+            }}>
+              <p style={{ 
+                margin: 0, 
+                color: blinking ? '#d32f2f' : '#e65100', 
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <AlertTriangle size={18} style={{ marginRight: '8px' }} />
+                Fire detected! Please check the area.
+              </p>
             </div>
           )}
           
@@ -2844,60 +2557,6 @@ const AdminDashboard = () => {
                   }}
                 />
               </div>
-              <div style={{ 
-                textAlign: 'center', 
-                margin: '10px 0 0 0',
-                padding: '5px',
-                borderRadius: '4px',
-                backgroundColor: '#e0e0e0'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                  <p style={{ 
-                    margin: '0 10px 0 0',
-                    fontWeight: '500'
-                  }}>
-                    Activity Status:
-                  </p>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    borderRadius: '50%',
-                    backgroundColor: stats.activityStatus === 0 
-                      ? '#4CAF50' 
-                      : stats.activityStatus === 1 
-                        ? '#f44336' 
-                        : '#9C27B0',
-                    color: 'white',
-                    fontWeight: 'bold',
-                    fontSize: '20px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                    animation: stats.activityStatus > 0 ? 'blink 0.5s infinite alternate' : 'none'
-                  }}>
-                    {stats.activityStatus}
-                  </div>
-                </div>
-                <p style={{ 
-                  margin: '5px 0 0 0',
-                  fontWeight: '500',
-                  fontSize: '14px',
-                  color: '#757575'
-                }}>
-                  {stats.activityStatus === 0 
-                    ? 'Normal' 
-                    : stats.activityStatus === 1 
-                      ? 'Fire Detected' 
-                      : 'Fighting Detected'}
-                </p>
-              </div>
-              <style jsx>{`
-                @keyframes blink {
-                  from { opacity: 1; }
-                  to { opacity: 0.5; }
-                }
-              `}</style>
             </div>
           </div>
           
@@ -3058,6 +2717,15 @@ const AdminDashboard = () => {
                           className="check-in-button"
                           onClick={() => handleCheckIn(booking)}
                           disabled={booking.checkedIn && verStatus === 1}
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: booking.checkedIn && verStatus === 1 ? '#4CAF50' : '#2196F3',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: booking.checkedIn && verStatus === 1 ? 'default' : 'pointer',
+                            opacity: booking.checkedIn && verStatus === 1 ? 0.7 : 1
+                          }}
                         >
                           {booking.checkedIn && verStatus === 1 ? 'Checked In' : 'Check In'}
                         </button>
@@ -3074,36 +2742,103 @@ const AdminDashboard = () => {
       </div>
       
       {showCamera && (
-        <div className="camera-modal-overlay">
-          <div className="camera-modal">
-            <div className="camera-modal-header">
-              <h3>Check-In Verification</h3>
-              <button className="close-button" onClick={stopCamera}>
+        <div className="camera-modal-overlay" style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000
+        }}>
+          <div className="camera-modal" style={{
+            backgroundColor: '#fff',
+            borderRadius: '8px',
+            padding: '20px',
+            maxWidth: '90%',
+            width: '500px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
+          }}>
+            <div className="camera-modal-header" style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '15px'
+            }}>
+              <h3 style={{ margin: 0 }}>Check-In Verification</h3>
+              <button 
+                className="close-button" 
+                onClick={stopCamera}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '20px'
+                }}
+              >
                 <X size={24} />
               </button>
             </div>
             
-            <div className="camera-container">
+            <div className="camera-container" style={{
+              position: 'relative',
+              width: '100%',
+              backgroundColor: '#000',
+              borderRadius: '4px',
+              overflow: 'hidden',
+              marginBottom: '20px'
+            }}>
               <video 
                 ref={videoRef}
                 autoPlay
                 playsInline
                 muted
                 className="camera-video"
+                style={{
+                  width: '100%',
+                  display: 'block'
+                }}
               />
               <canvas ref={canvasRef} style={{ display: 'none' }} />
               
               {verified === true && (
-                <div className="verification-result success">
+                <div className="verification-result success" style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: 'rgba(76, 175, 80, 0.7)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  color: 'white'
+                }}>
                   <CheckCircle size={64} />
-                  <p>Identity Verified!</p>
+                  <p style={{ fontSize: '20px', fontWeight: 'bold', marginTop: '10px' }}>Identity Verified!</p>
                 </div>
               )}
               
               {verified === false && (
-                <div className="verification-result failure">
+                <div className="verification-result failure" style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: 'rgba(244, 67, 54, 0.7)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  color: 'white'
+                }}>
                   <XCircle size={64} />
-                  <p>Identity Verification Failed</p>
+                  <p style={{ fontSize: '20px', fontWeight: 'bold', marginTop: '10px' }}>Identity Verification Failed</p>
                 </div>
               )}
             </div>
@@ -3113,6 +2848,22 @@ const AdminDashboard = () => {
                 <button 
                   className="capture-button"
                   onClick={captureImage}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: '#4CAF50',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px', 
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                    margin: '0 auto'
+                  }}
                 >
                   <Camera size={24} />
                   <span>Capture Image</span>
@@ -3120,9 +2871,25 @@ const AdminDashboard = () => {
               )}
               
               {comparing && (
-                <div className="comparing-indicator">
-                  <p>Comparing images...</p>
-                  <div className="loading-spinner"></div>
+                <div className="comparing-indicator" style={{
+                  textAlign: 'center',
+                  marginTop: '10px'
+                }}>
+                  <p style={{ marginBottom: '10px' }}>Comparing images...</p>
+                  <div className="loading-spinner" style={{
+                    display: 'inline-block',
+                    width: '30px',
+                    height: '30px',
+                    border: '3px solid rgba(0, 0, 0, 0.1)',
+                    borderRadius: '50%',
+                    borderTopColor: '#2196F3',
+                    animation: 'spin 1s ease-in-out infinite'
+                  }}></div>
+                  <style jsx>{`
+                    @keyframes spin {
+                      to { transform: rotate(360deg); }
+                    }
+                  `}</style>
                 </div>
               )}
               
@@ -3130,6 +2897,17 @@ const AdminDashboard = () => {
                 <button 
                   className="retry-button"
                   onClick={() => setVerified(null)}
+                  style={{
+                    padding: '10px 20px',
+                    backgroundColor: '#2196F3',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    display: 'block',
+                    margin: '10px auto 0'
+                  }}
                 >
                   Try Again
                 </button>
