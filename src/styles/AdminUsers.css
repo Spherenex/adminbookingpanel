@@ -1,0 +1,133 @@
+/* src/styles/AdminUsers.css */
+
+.admin-users {
+  background-color: #f5f7fa;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.users-title {
+  font-size: 24px;
+  color: #2a3b4c;
+  margin-bottom: 24px;
+}
+
+/* Filters */
+.users-filters {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.search-filter {
+  flex: 1;
+}
+
+.search-filter input {
+  width: 100%;
+  padding: 10px 15px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.search-filter input:focus {
+  border-color: #4c84ff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(76, 132, 255, 0.1);
+}
+
+/* Table Container */
+.users-table-container {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table th {
+  text-align: left;
+  padding: 15px 20px;
+  border-bottom: 2px solid #e2e8f0;
+  color: #718096;
+  font-weight: 500;
+  font-size: 14px;
+  background-color: #f8fafc;
+  white-space: nowrap;
+}
+
+.users-table td {
+  padding: 15px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #4a5568;
+  font-size: 14px;
+}
+
+.users-table tr:last-child td {
+  border-bottom: none;
+}
+
+.users-table tr:hover td {
+  background-color: #f8fafc;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.role-admin {
+  background-color: #ebf4ff;
+  color: #3182ce;
+}
+
+.role-user {
+  background-color: #f0fff4;
+  color: #38a169;
+}
+
+/* Empty and Loading States */
+.no-users {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 40px;
+  text-align: center;
+  color: #718096;
+}
+
+.users-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 40px;
+  text-align: center;
+  color: #718096;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .users-table th:nth-child(1),
+  .users-table td:nth-child(1),
+  .users-table th:nth-child(4),
+  .users-table td:nth-child(4),
+  .users-table th:nth-child(5),
+  .users-table td:nth-child(5) {
+    display: none;
+  }
+}
