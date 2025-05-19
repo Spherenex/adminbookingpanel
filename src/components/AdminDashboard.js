@@ -42,7 +42,7 @@
 //   const [motionLevel, setMotionLevel] = useState(0);
 //   const [verificationLogs, setVerificationLogs] = useState([]);
 //   const [showVerificationLogs, setShowVerificationLogs] = useState(false);
-  
+
 //   const videoRef = useRef(null);
 //   const canvasRef = useRef(null);
 //   const streamRef = useRef(null);
@@ -60,16 +60,16 @@
 //       try {
 //         const monitoringRef = ref(database, 'monitoring/unusualActivity');
 //         const snapshot = await get(monitoringRef);
-        
+
 //         if (snapshot.exists()) {
 //           const data = snapshot.val();
-          
+
 //           if (data.status > 0) { // If status is 1 (fire)
 //             // Check if the alert is older than 1 minute
 //             const alertTime = new Date(data.timestamp);
 //             const currentTime = new Date();
 //             const timeDiffMinutes = (currentTime - alertTime) / (1000 * 60);
-            
+
 //             if (timeDiffMinutes > 1) {
 //               console.log("Resetting stale alert from previous session");
 //               await set(monitoringRef, {
@@ -84,9 +84,9 @@
 //         console.error("Error checking alert state:", error);
 //       }
 //     };
-    
+
 //     checkAndResetAlert();
-    
+
 //     // Cleanup function when component unmounts
 //     return () => {
 //       if (monitoringStreamRef.current) {
@@ -98,7 +98,7 @@
 //       if (analysisIntervalRef.current) {
 //         clearInterval(analysisIntervalRef.current);
 //       }
-      
+
 //       // Reset Firebase alert state on unmount to prevent persisting alerts
 //       const monitoringRef = ref(database, 'monitoring/unusualActivity');
 //       set(monitoringRef, {
@@ -110,7 +110,7 @@
 //       });
 //     };
 //   }, []);
-  
+
 //   // Fetch stats from Firebase
 //   useEffect(() => {
 //     setLoading(true);
@@ -127,7 +127,7 @@
 //           }));
 //         }
 //       });
-      
+
 //       // Fetch bookings data
 //       const bookingsRef = ref(database, 'stadium_transactions');
 //       onValue(bookingsRef, (snapshot) => {
@@ -137,14 +137,14 @@
 //             id,
 //             ...data
 //           }));
-          
+
 //           const totalBookings = bookings.length;
 //           const pendingPayments = bookings.filter(b => b.paymentStatus !== 'completed').length;
 //           const completedPayments = bookings.filter(b => b.paymentStatus === 'completed').length;
 //           const recentBookings = bookings
 //             .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
 //             .slice(0, 5);
-          
+
 //           setStats(prevStats => ({
 //             ...prevStats,
 //             totalBookings,
@@ -168,13 +168,13 @@
 //         if (snapshot.exists()) {
 //           const activityData = snapshot.val();
 //           const statusCode = activityData.status;
-          
+
 //           setStats(prevStats => ({
 //             ...prevStats,
 //             activityStatus: statusCode,
 //             unusualActivity: activityData.message || 'Normal'
 //           }));
-          
+
 //           if (statusCode === 1) { // Fire detected
 //             setFireDetected(true);
 //             setBlinking(true);
@@ -190,25 +190,25 @@
 //       onValue(sensorsRef, (snapshot) => {
 //         if (snapshot.exists()) {
 //           const sensorsData = snapshot.val();
-          
+
 //           // Parse temperature value
 //           const temperature = parseFloat(sensorsData.Temperature) || 0;
-          
+
 //           // Parse humidity value
 //           const humidity = parseFloat(sensorsData.Humidity) || 0;
-          
+
 //           // Check alcohol detection status
 //           const alcoholValue = parseInt(sensorsData.Alcohol) || 0;
 //           const alcoholStatus = alcoholValue === 0 ? 'No detection' : 'Alcohol detected';
-          
+
 //           // Check gas detection status
 //           const gasValue = parseInt(sensorsData.Gas) || 0;
 //           const gasStatus = gasValue === 0 ? 'No detection' : 'Gas detected';
-          
+
 //           // Check fire detection status from Firebase
 //           const fireValue = parseInt(sensorsData.Fire) || 0;
 //           const fireStatus = fireValue === 0 ? 'No detection' : 'Fire detected';
-          
+
 //           // Update stats with sensor data
 //           setStats(prevStats => ({
 //             ...prevStats,
@@ -218,13 +218,13 @@
 //             gasDetection: gasStatus,
 //             fireDetection: fireStatus
 //           }));
-          
+
 //           // If fire is detected from the backend sensor (Firebase value is 1)
 //           if (fireValue === 1) {
 //             // Update Firebase with status 1 for fire detection
 //             const monitoringRef = ref(database, 'monitoring/unusualActivity');
 //             const timestamp = new Date().toISOString();
-            
+
 //             set(monitoringRef, {
 //               status: 1,
 //               message: 'Fire detected',
@@ -236,7 +236,7 @@
 //         }
 //       });
 //     };
-    
+
 //     fetchStats();
 //   }, []);
 
@@ -260,24 +260,24 @@
 //       const logsRef = ref(database, 'verification_logs');
 //       const snapshot = await get(logsRef);
 //       const existingLogs = snapshot.exists() ? snapshot.val() : {};
-      
+
 //       // Map of booking IDs that already have logs
 //       const bookingsWithLogs = new Set();
-      
+
 //       // Extract booking IDs from existing logs
 //       Object.values(existingLogs).forEach(log => {
 //         if (log.bookingId) {
 //           bookingsWithLogs.add(log.bookingId);
 //         }
 //       });
-      
+
 //       // Create logs for bookings that don't have one yet
 //       for (const booking of bookings) {
 //         if (!bookingsWithLogs.has(booking.id)) {
 //           // Create a new verification log with status 0 (not verified)
 //           const verificationId = `verification_init_${booking.id}`;
 //           const timestamp = new Date().toISOString();
-          
+
 //           await set(ref(database, `verification_logs/${verificationId}`), {
 //             userId: booking.userId || "unknown",
 //             bookingId: booking.id,
@@ -289,7 +289,7 @@
 //             location: "Not Checked In",
 //             initialized: true
 //           });
-          
+
 //           console.log(`Initialized verification log for booking ${booking.id}`);
 //         }
 //       }
@@ -302,18 +302,18 @@
 //   const fetchVerificationLogs = async () => {
 //     try {
 //       const logsRef = ref(database, 'verification_logs');
-      
+
 //       onValue(logsRef, (snapshot) => {
 //         if (snapshot.exists()) {
 //           const logsData = snapshot.val();
-          
+
 //           // Convert to array and sort by timestamp (newest first)
 //           const logsArray = Object.entries(logsData).map(([id, data]) => ({
 //             id,
 //             ...data,
 //             timestamp: data.timestamp || new Date().toISOString()
 //           })).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-          
+
 //           setVerificationLogs(logsArray);
 //         } else {
 //           setVerificationLogs([]);
@@ -354,7 +354,7 @@
 //       context.fillStyle = "#000";
 //       context.fillRect(0, 0, canvas.width, canvas.height);
 //     }
-    
+
 //     if (motionCanvasRef.current) {
 //       const canvas = motionCanvasRef.current;
 //       const context = canvas.getContext('2d');
@@ -394,40 +394,40 @@
 //     let firePixelCount = 0;
 //     let brightYellowCount = 0;
 //     let brightWhiteCount = 0;
-    
+
 //     // Loop through pixels looking for fire characteristics
 //     for (let i = 0; i < data.length; i += 4) {
 //       const r = data[i];
 //       const g = data[i + 1];
 //       const b = data[i + 2];
-      
+
 //       // Check for fire-red/orange pixels (high red, medium green, low blue)
 //       // More specific color detection to avoid false positives
 //       if (r > 220 && g > 50 && g < 140 && b < 50 && r > g + 100 && r > b + 150) {
 //         firePixelCount++;
 //       }
-      
+
 //       // Check for flame-yellow pixels (high red, high green, low blue)
 //       if (r > 220 && g > 180 && b < 100 && r > b + 120 && g > b + 120) {
 //         brightYellowCount++;
 //       }
-      
+
 //       // Check for bright white center of flame (all high values)
 //       if (r > 240 && g > 240 && b > 220) {
 //         brightWhiteCount++;
 //       }
 //     }
-    
+
 //     // Count total fire-related pixels
 //     const totalFirePixels = firePixelCount + brightYellowCount + brightWhiteCount;
-    
+
 //     // Calculate percentage of fire pixels
 //     const totalPixels = imageData.width * imageData.height;
 //     const fireRatio = totalFirePixels / totalPixels;
-    
+
 //     // Debug information
 //     console.log(`Fire detection: ${fireRatio.toFixed(4)} (${firePixelCount} fire pixels, ${brightYellowCount} yellow, ${brightWhiteCount} white)`);
-    
+
 //     // More stringent threshold to avoid false positives
 //     return fireRatio > 0.005;
 //   };
@@ -435,33 +435,33 @@
 //   // Calculate motion level between two frames
 //   const calculateMotion = (currentFrame, previousFrame) => {
 //     if (!previousFrame) return 0;
-    
+
 //     const curr = currentFrame.data;
 //     const prev = previousFrame.data;
 //     let diffCount = 0;
 //     const threshold = 30; // Sensitivity threshold for motion detection
-    
+
 //     // Compare pixels between frames to detect motion
 //     for (let i = 0; i < curr.length; i += 4) {
 //       const rDiff = Math.abs(curr[i] - prev[i]);
 //       const gDiff = Math.abs(curr[i+1] - prev[i+1]);
 //       const bDiff = Math.abs(curr[i+2] - prev[i+2]);
-      
+
 //       // If any color channel has changed significantly, count as motion
 //       if (rDiff > threshold || gDiff > threshold || bDiff > threshold) {
 //         diffCount++;
 //       }
 //     }
-    
+
 //     const totalPixels = currentFrame.width * currentFrame.height;
 //     const motionRatio = diffCount / totalPixels;
-    
+
 //     // Debug info
 //     console.log(`Motion level: ${(motionRatio * 100).toFixed(2)}% changed pixels`);
-    
+
 //     return motionRatio;
 //   };
-  
+
 //   // Start background monitoring
 //   const startBackgroundMonitoring = async () => {
 //     try {
@@ -471,7 +471,7 @@
 //       setBlinking(false);
 //       setLastFrameData(null);
 //       setMotionLevel(0);
-      
+
 //       // Always ensure we're starting with a clean state in Firebase
 //       const monitoringRef = ref(database, 'monitoring/unusualActivity');
 //       await set(monitoringRef, {
@@ -479,7 +479,7 @@
 //         message: 'Normal',
 //         timestamp: new Date().toISOString()
 //       });
-      
+
 //       const stream = await navigator.mediaDevices.getUserMedia({ 
 //         video: { 
 //           width: 320, 
@@ -487,61 +487,61 @@
 //           facingMode: 'environment' 
 //         } 
 //       });
-      
+
 //       monitoringStreamRef.current = stream;
 //       if (monitoringVideoRef.current) {
 //         monitoringVideoRef.current.srcObject = stream;
 //       }
-      
+
 //       // Using setTimeout to ensure the video element is properly initialized
 //       setTimeout(() => {
 //         // Try-catch block specifically for canvas operations
 //         try {
 //           const canvas = monitoringCanvasRef.current;
 //           const motionCanvas = motionCanvasRef.current;
-          
+
 //           if (!canvas || !motionCanvas) {
 //             throw new Error("Canvas elements are not available");
 //           }
-          
+
 //           const context = canvas.getContext('2d');
 //           const motionContext = motionCanvas.getContext('2d');
-          
+
 //           if (!context || !motionContext) {
 //             throw new Error("Could not get 2D context from canvas");
 //           }
-          
+
 //           canvas.width = 320;
 //           canvas.height = 240;
 //           motionCanvas.width = 320;
 //           motionCanvas.height = 240;
-          
+
 //           monitoringIntervalRef.current = setInterval(() => {
 //             try {
 //               if (monitoringVideoRef.current && monitoringVideoRef.current.readyState === 4) {
 //                 // Draw current frame to main canvas
 //                 context.drawImage(monitoringVideoRef.current, 0, 0, canvas.width, canvas.height);
-                
+
 //                 // Get image data for analysis
 //                 const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                
+
 //                 // Calculate motion if we have a previous frame
 //                 let currentMotionLevel = 0;
 //                 if (lastFrameData) {
 //                   currentMotionLevel = calculateMotion(imageData, lastFrameData);
 //                   setMotionLevel(currentMotionLevel);
-                  
+
 //                   // Draw motion visualization to motion canvas
 //                   const motionData = motionContext.createImageData(canvas.width, canvas.height);
 //                   const currData = imageData.data;
 //                   const prevData = lastFrameData.data;
 //                   const motionDataArr = motionData.data;
-                  
+
 //                   for (let i = 0; i < currData.length; i += 4) {
 //                     const rDiff = Math.abs(currData[i] - prevData[i]);
 //                     const gDiff = Math.abs(currData[i+1] - prevData[i+1]);
 //                     const bDiff = Math.abs(currData[i+2] - prevData[i+2]);
-                    
+
 //                     if (rDiff > 30 || gDiff > 30 || bDiff > 30) {
 //                       // Highlight areas with motion in blue
 //                       motionDataArr[i] = 0;      // R
@@ -557,26 +557,26 @@
 //                     }
 //                   }
 //                 }
-                
+
 //                 // Store current frame for next comparison
 //                 setLastFrameData(imageData);
-                
+
 //                 // Check for fire
 //                 const fireDetected = detectFire(imageData);
-                
+
 //                 // Update Firebase based on detection
 //                 if (fireDetected) {
 //                   // Increment fire detection counter
 //                   setFireDetectionCount(prev => {
 //                     const newCount = prev + 1;
-                    
+
 //                     // If we detect fire for 2 consecutive frames, trigger the alert
 //                     if (newCount >= 2) {
 //                       // Update Firebase with status 1 for fire
 //                       console.log("FIRE DETECTED! Updating Firebase...");
 //                       const monitoringRef = ref(database, 'monitoring/unusualActivity');
 //                       const timestamp = new Date().toISOString();
-                      
+
 //                       set(monitoringRef, {
 //                         status: 1,
 //                         message: 'Fire detected',
@@ -589,7 +589,7 @@
 //                         console.error("Error updating firebase:", err);
 //                       });
 //                     }
-                    
+
 //                     return newCount;
 //                   });
 //                 } else {
@@ -601,7 +601,7 @@
 //               console.error("Error in monitoring interval:", error);
 //             }
 //           }, 300); // Run detection more frequently (3 times per second)
-          
+
 //           setMonitoringActive(true);
 //         } catch (canvasError) {
 //           console.error("Canvas initialization error:", canvasError);
@@ -626,14 +626,14 @@
 //       clearInterval(analysisIntervalRef.current);
 //     }
 //     setMonitoringActive(false);
-    
+
 //     // Reset detection states
 //     setFireDetected(false);
 //     setBlinking(false);
 //     setFireDetectionCount(0);
 //     setLastFrameData(null);
 //     setMotionLevel(0);
-    
+
 //     // Always reset Firebase status when stopping monitoring
 //     const monitoringRef = ref(database, 'monitoring/unusualActivity');
 //     set(monitoringRef, {
@@ -654,14 +654,14 @@
 //   const handleCheckIn = (booking) => {
 //     setCurrentBooking(booking);
 //     setShowCamera(true);
-    
+
 //     // Find if there's an existing verification log for this booking
 //     const existingLog = findExistingVerificationLog(booking.id);
-    
+
 //     // Set initial verification status based on existing log
 //     setVerificationStatus(existingLog ? existingLog.status : 0);
 //     setVerified(existingLog && existingLog.status === 1 ? true : null);
-    
+
 //     startCamera();
 //   };
 
@@ -722,30 +722,30 @@
 //       // Find existing verification log
 //       const existingLog = findExistingVerificationLog(currentBooking.id);
 //       const timestamp = new Date().toISOString();
-      
+
 //       // 1. Upload the captured image to Firebase Storage
 //       const checkInImageRef = storageRef(storage, `check-ins/${currentBooking.id}_${Date.now()}.jpg`);
 //       await uploadBytes(checkInImageRef, imageBlob);
 //       const checkInImageUrl = await getDownloadURL(checkInImageRef);
-      
+
 //       // 2. Get user reference data
 //       const userRef = ref(database, `users/${currentBooking.userId}`);
 //       const userSnapshot = await get(userRef);
 //       let profileImageUrl = null;
 //       let userName = "Unknown User";
-      
+
 //       if (userSnapshot.exists()) {
 //         const userData = userSnapshot.val();
 //         profileImageUrl = userData.faceImageUrl || userData.profileImageUrl;
 //         userName = userData.name || userData.displayName || "Unknown User";
 //       }
-      
+
 //       // 3. Simulate face verification (in a real app, use a face comparison API)
 //       setTimeout(() => {
 //         // Simulate 70% success rate
 //         const isMatch = Math.random() > 0.3; 
 //         const numericStatus = isMatch ? 1 : 0; // 1 = verified, 0 = failed
-        
+
 //         // 4. Update the transaction record
 //         const bookingRef = ref(database, `stadium_transactions/${currentBooking.id}`);
 //         update(bookingRef, {
@@ -755,10 +755,10 @@
 //           identityVerified: isMatch,
 //           verificationStatus: numericStatus // Numeric status
 //         });
-        
+
 //         // 5. Update existing verification log or create a new one
 //         let logRef;
-        
+
 //         if (existingLog) {
 //           // Update existing log
 //           logRef = ref(database, `verification_logs/${existingLog.id}`);
@@ -788,7 +788,7 @@
 //             location: "Stadium Entrance"
 //           });
 //         }
-        
+
 //         // 6. Add to user's verification history
 //         const userHistoryRef = ref(database, `users/${currentBooking.userId}/verification_history/${Date.now()}`);
 //         set(userHistoryRef, {
@@ -796,12 +796,12 @@
 //           status: numericStatus,
 //           bookingId: currentBooking.id
 //         });
-        
+
 //         // 7. Update the UI state
 //         setVerified(isMatch);
 //         setVerificationStatus(numericStatus);
 //         setComparing(false);
-        
+
 //         if (isMatch) {
 //           setTimeout(() => {
 //             stopCamera();
@@ -825,7 +825,7 @@
 //     const monitoringRef = ref(database, 'monitoring/unusualActivity');
 //     const timestamp = new Date().toISOString();
 //     const message = 'Fire detected';
-    
+
 //     set(monitoringRef, {
 //       status: 0,
 //       message: message,
@@ -843,7 +843,7 @@
 //   const resetFireDetection = () => {
 //     const monitoringRef = ref(database, 'monitoring/unusualActivity');
 //     const timestamp = new Date().toISOString();
-    
+
 //     set(monitoringRef, {
 //       status: 0,
 //       message: 'Normal',
@@ -864,7 +864,7 @@
 //   return (
 //     <div className="admin-dashboard">
 //       <h2 className="dashboard-title">Dashboard</h2>
-      
+
 //       <div className="stats-grid">
 //         {statCards.map((card, index) => (
 //           <div key={index} className={`stat-card card-${card.color}`}>
@@ -876,7 +876,7 @@
 //           </div>
 //         ))}
 //       </div>
-      
+
 //       <div className="dashboard-tables">
 //         <div className="monitoring-section">
 //           <h3>Environment Monitoring</h3>
@@ -900,13 +900,13 @@
 //               from { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7); }
 //               to { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); }
 //             }
-            
+
 //             @keyframes blink {
 //               from { opacity: 1; }
 //               to { opacity: 0.7; }
 //             }
 //           `}</style>
-          
+
 //           <div className="monitoring-controls">
 //             {monitoringActive ? (
 //               <button 
@@ -949,7 +949,7 @@
 //                 <span style={{ marginLeft: '8px' }}>Start Monitoring</span>
 //               </button>
 //             )}
-            
+
 //             {/* Testing buttons for development */}
 //             {monitoringActive && (
 //               <>
@@ -971,7 +971,7 @@
 //                   <AlertTriangle size={20} />
 //                   <span style={{ marginLeft: '8px' }}>Test Fire</span>
 //                 </button>
-                
+
 //                 <button 
 //                   onClick={resetFireDetection}
 //                   style={{
@@ -992,7 +992,7 @@
 //               </>
 //             )}
 //           </div>
-          
+
 //           {fireDetected && (
 //             <div style={{ 
 //               marginTop: '15px',
@@ -1016,7 +1016,7 @@
 //               </p>
 //             </div>
 //           )}
-          
+
 //           {/* Always render the video and canvas elements but only show when active */}
 //           <div className="monitoring-container" style={{ 
 //             marginTop: '15px', 
@@ -1046,7 +1046,7 @@
 //               </div>
 //             </div>
 //           </div>
-          
+
 //           {/* Hidden canvases for processing */}
 //           <canvas 
 //             ref={monitoringCanvasRef} 
@@ -1069,7 +1069,7 @@
 //             }} 
 //           />
 //         </div>
-        
+
 //         {/* Verification Logs Section */}
 //         <div className="verification-logs-section">
 //           <div className="section-header" style={{ 
@@ -1097,7 +1097,7 @@
 //               <span style={{ marginLeft: '6px' }}>{showVerificationLogs ? 'Hide Logs' : 'Show Logs'}</span>
 //             </button>
 //           </div>
-          
+
 //           {showVerificationLogs && (
 //             <div className="verification-logs-table" style={{
 //               backgroundColor: '#fff',
@@ -1151,7 +1151,7 @@
 //             </div>
 //           )}
 //         </div>
-        
+
 //         <div className="recent-bookings">
 //           <h3>Recent Bookings</h3>
 //           {stats.recentBookings.length > 0 ? (
@@ -1171,7 +1171,7 @@
 //                   // Find verification log for this booking
 //                   const verLog = verificationLogs.find(log => log.bookingId === booking.id);
 //                   const verStatus = verLog ? verLog.status : 0;
-                  
+
 //                   return (
 //                     <tr key={booking.id}>
 //                       <td>{index + 1}</td>
@@ -1227,7 +1227,7 @@
 //           )}
 //         </div>
 //       </div>
-      
+
 //       {showCamera && (
 //         <div className="camera-modal-overlay" style={{
 //           position: 'fixed',
@@ -1269,7 +1269,7 @@
 //                 <X size={24} />
 //               </button>
 //             </div>
-            
+
 //             <div className="camera-container" style={{
 //               position: 'relative',
 //               width: '100%',
@@ -1290,7 +1290,7 @@
 //                 }}
 //               />
 //               <canvas ref={canvasRef} style={{ display: 'none' }} />
-              
+
 //               {verified === true && (
 //                 <div className="verification-result success" style={{
 //                   position: 'absolute',
@@ -1309,7 +1309,7 @@
 //                   <p style={{ fontSize: '20px', fontWeight: 'bold', marginTop: '10px' }}>Identity Verified!</p>
 //                 </div>
 //               )}
-              
+
 //               {verified === false && (
 //                 <div className="verification-result failure" style={{
 //                   position: 'absolute',
@@ -1329,7 +1329,7 @@
 //                 </div>
 //               )}
 //             </div>
-            
+
 //             <div className="camera-controls">
 //               {!comparing && verified === null && (
 //                 <button 
@@ -1356,7 +1356,7 @@
 //                   <span>Capture Image</span>
 //                 </button>
 //               )}
-              
+
 //               {comparing && (
 //                 <div className="comparing-indicator" style={{
 //                   textAlign: 'center',
@@ -1379,7 +1379,7 @@
 //                   `}</style>
 //                 </div>
 //               )}
-              
+
 //               {verified === false && (
 //                 <button 
 //                   className="retry-button"
@@ -1400,7 +1400,7 @@
 //                 </button>
 //               )}
 //             </div>
-            
+
 //             {/* Verification Status Number Display */}
 //             <div style={{
 //               marginTop: '15px',
@@ -1459,8 +1459,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ref, onValue, update, get, set, push } from 'firebase/database';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { database, storage } from '../firebase';
-import { 
-  Users, Calendar, DollarSign, Ticket, Thermometer, Droplets, Wine, 
+import {
+  Users, Calendar, DollarSign, Ticket, Thermometer, Droplets, Wine,
   AlertTriangle, Camera, X, CheckCircle, XCircle, Video, VideoOff, User, UserPlus, Shield, List, Wind
 } from 'lucide-react';
 import '../styles/AdminDashboard.css';
@@ -1496,7 +1496,7 @@ const AdminDashboard = () => {
   const [showVerificationLogs, setShowVerificationLogs] = useState(false);
   const [monitoringFrameCount, setMonitoringFrameCount] = useState(0);
   const [calibrationCompleted, setCalibrationCompleted] = useState(false);
-  
+
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
@@ -1523,7 +1523,7 @@ const AdminDashboard = () => {
         console.error("Error resetting Firebase data:", error);
       }
     };
-    
+
     resetFirebaseData();
   }, []);
 
@@ -1534,16 +1534,16 @@ const AdminDashboard = () => {
       try {
         const monitoringRef = ref(database, 'monitoring/unusualActivity');
         const snapshot = await get(monitoringRef);
-        
+
         if (snapshot.exists()) {
           const data = snapshot.val();
-          
+
           if (data.status > 0) { // If status is 1 (fire)
             // Check if the alert is older than 1 minute
             const alertTime = new Date(data.timestamp);
             const currentTime = new Date();
             const timeDiffMinutes = (currentTime - alertTime) / (1000 * 60);
-            
+
             if (timeDiffMinutes > 1) {
               console.log("Resetting stale alert from previous session");
               await set(monitoringRef, {
@@ -1558,9 +1558,9 @@ const AdminDashboard = () => {
         console.error("Error checking alert state:", error);
       }
     };
-    
+
     checkAndResetAlert();
-    
+
     // Cleanup function when component unmounts
     return () => {
       if (monitoringStreamRef.current) {
@@ -1572,7 +1572,7 @@ const AdminDashboard = () => {
       if (analysisIntervalRef.current) {
         clearInterval(analysisIntervalRef.current);
       }
-      
+
       // Reset Firebase alert state on unmount to prevent persisting alerts
       const monitoringRef = ref(database, 'monitoring/unusualActivity');
       set(monitoringRef, {
@@ -1584,7 +1584,7 @@ const AdminDashboard = () => {
       });
     };
   }, []);
-  
+
   // Fetch stats from Firebase
   useEffect(() => {
     setLoading(true);
@@ -1601,7 +1601,7 @@ const AdminDashboard = () => {
           }));
         }
       });
-      
+
       // Fetch bookings data
       const bookingsRef = ref(database, 'stadium_transactions');
       onValue(bookingsRef, (snapshot) => {
@@ -1611,14 +1611,14 @@ const AdminDashboard = () => {
             id,
             ...data
           }));
-          
+
           const totalBookings = bookings.length;
           const pendingPayments = bookings.filter(b => b.paymentStatus !== 'completed').length;
           const completedPayments = bookings.filter(b => b.paymentStatus === 'completed').length;
           const recentBookings = bookings
             .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
             .slice(0, 5);
-          
+
           setStats(prevStats => ({
             ...prevStats,
             totalBookings,
@@ -1642,13 +1642,13 @@ const AdminDashboard = () => {
         if (snapshot.exists()) {
           const activityData = snapshot.val();
           const statusCode = activityData.status;
-          
+
           setStats(prevStats => ({
             ...prevStats,
             activityStatus: statusCode,
             unusualActivity: activityData.message || 'Normal'
           }));
-          
+
           if (statusCode === 1) { // Fire detected
             setFireDetected(true);
             setBlinking(true);
@@ -1664,25 +1664,25 @@ const AdminDashboard = () => {
       onValue(sensorsRef, (snapshot) => {
         if (snapshot.exists()) {
           const sensorsData = snapshot.val();
-          
+
           // Parse temperature value
           const temperature = parseFloat(sensorsData.Temperature) || 0;
-          
+
           // Parse humidity value
           const humidity = parseFloat(sensorsData.Humidity) || 0;
-          
+
           // Check alcohol detection status
           const alcoholValue = parseInt(sensorsData.Alcohol) || 0;
           const alcoholStatus = alcoholValue === 0 ? 'No detection' : 'Alcohol detected';
-          
+
           // Check gas detection status
           const gasValue = parseInt(sensorsData.Gas) || 0;
           const gasStatus = gasValue === 0 ? 'No detection' : 'Gas detected';
-          
+
           // Check fire detection status from Firebase
           const fireValue = parseInt(sensorsData.Fire) || 0;
           const fireStatus = fireValue === 0 ? 'No detection' : 'Fire detected';
-          
+
           // Update stats with sensor data
           setStats(prevStats => ({
             ...prevStats,
@@ -1692,13 +1692,13 @@ const AdminDashboard = () => {
             gasDetection: gasStatus,
             fireDetection: fireStatus
           }));
-          
+
           // If fire is detected from the backend sensor (Firebase value is 1)
           if (fireValue === 1) {
             // Update Firebase with status 1 for fire detection
             const monitoringRef = ref(database, 'monitoring/unusualActivity');
             const timestamp = new Date().toISOString();
-            
+
             set(monitoringRef, {
               status: 1,
               message: 'Fire detected',
@@ -1710,7 +1710,7 @@ const AdminDashboard = () => {
         }
       });
     };
-    
+
     fetchStats();
   }, []);
 
@@ -1734,24 +1734,24 @@ const AdminDashboard = () => {
       const logsRef = ref(database, 'verification_logs');
       const snapshot = await get(logsRef);
       const existingLogs = snapshot.exists() ? snapshot.val() : {};
-      
+
       // Map of booking IDs that already have logs
       const bookingsWithLogs = new Set();
-      
+
       // Extract booking IDs from existing logs
       Object.values(existingLogs).forEach(log => {
         if (log.bookingId) {
           bookingsWithLogs.add(log.bookingId);
         }
       });
-      
+
       // Create logs for bookings that don't have one yet
       for (const booking of bookings) {
         if (!bookingsWithLogs.has(booking.id)) {
           // Create a new verification log with status 0 (not verified)
           const verificationId = `verification_init_${booking.id}`;
           const timestamp = new Date().toISOString();
-          
+
           await set(ref(database, `verification_logs/${verificationId}`), {
             userId: booking.userId || "unknown",
             bookingId: booking.id,
@@ -1763,7 +1763,7 @@ const AdminDashboard = () => {
             location: "Not Checked In",
             initialized: true
           });
-          
+
           console.log(`Initialized verification log for booking ${booking.id}`);
         }
       }
@@ -1776,18 +1776,18 @@ const AdminDashboard = () => {
   const fetchVerificationLogs = async () => {
     try {
       const logsRef = ref(database, 'verification_logs');
-      
+
       onValue(logsRef, (snapshot) => {
         if (snapshot.exists()) {
           const logsData = snapshot.val();
-          
+
           // Convert to array and sort by timestamp (newest first)
           const logsArray = Object.entries(logsData).map(([id, data]) => ({
             id,
             ...data,
             timestamp: data.timestamp || new Date().toISOString()
           })).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-          
+
           setVerificationLogs(logsArray);
         } else {
           setVerificationLogs([]);
@@ -1828,7 +1828,7 @@ const AdminDashboard = () => {
       context.fillStyle = "#000";
       context.fillRect(0, 0, canvas.width, canvas.height);
     }
-    
+
     if (motionCanvasRef.current) {
       const canvas = motionCanvasRef.current;
       const context = canvas.getContext('2d');
@@ -1854,11 +1854,11 @@ const AdminDashboard = () => {
     { title: 'Fire Detection', value: stats.fireDetection, icon: <AlertTriangle size={24} />, gradientClass: fireDetected && blinking ? 'gradient-fire-blink' : 'gradient-fire' },
     { title: 'Temperature', value: `${stats.temperature}°C`, icon: <Thermometer size={24} />, gradientClass: 'gradient-orange' },
     { title: 'Humidity', value: `${stats.humidity}%`, icon: <Droplets size={24} />, gradientClass: 'gradient-blue' },
-    { 
-      title: 'Unusual Activity', 
-      value: stats.activityStatus === 0 ? 'Normal' : 'Fire detected', 
-      icon: <AlertTriangle size={24} />, 
-      gradientClass: fireDetected && blinking ? 'gradient-alert-blink' : 'gradient-purple' 
+    {
+      title: 'Unusual Activity',
+      value: stats.activityStatus === 0 ? 'Normal' : 'Fire detected',
+      icon: <AlertTriangle size={24} />,
+      gradientClass: fireDetected && blinking ? 'gradient-alert-blink' : 'gradient-purple'
     }
   ];
 
@@ -1868,46 +1868,46 @@ const AdminDashboard = () => {
     if (monitoringFrameCount < 10) {
       return false;
     }
-    
+
     const data = imageData.data;
     let firePixelCount = 0;
     let brightYellowCount = 0;
     let brightWhiteCount = 0;
-    
+
     // Loop through pixels looking for fire characteristics
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i];
       const g = data[i + 1];
       const b = data[i + 2];
-      
+
       // More stringent fire-red/orange pixels detection to avoid false positives
       if (r > 230 && g > 50 && g < 140 && b < 40 && r > g + 120 && r > b + 170) {
         firePixelCount++;
       }
-      
+
       // More stringent flame-yellow pixels detection
       if (r > 230 && g > 190 && b < 90 && r > b + 130 && g > b + 130) {
         brightYellowCount++;
       }
-      
+
       // More stringent bright white center of flame detection
       if (r > 245 && g > 245 && b > 230) {
         brightWhiteCount++;
       }
     }
-    
+
     // Count total fire-related pixels
     const totalFirePixels = firePixelCount + brightYellowCount + brightWhiteCount;
-    
+
     // Calculate percentage of fire pixels
     const totalPixels = imageData.width * imageData.height;
     const fireRatio = totalFirePixels / totalPixels;
-    
+
     // Only log if we detect something significant to reduce console noise
     if (fireRatio > 0.001) {
       console.log(`Fire detection: ${fireRatio.toFixed(4)} (${firePixelCount} fire pixels, ${brightYellowCount} yellow, ${brightWhiteCount} white)`);
     }
-    
+
     // Higher threshold to avoid false positives (0.01 = 1% of pixels)
     return fireRatio > 0.01;
   };
@@ -1915,33 +1915,33 @@ const AdminDashboard = () => {
   // Calculate motion level between two frames
   const calculateMotion = (currentFrame, previousFrame) => {
     if (!previousFrame) return 0;
-    
+
     const curr = currentFrame.data;
     const prev = previousFrame.data;
     let diffCount = 0;
     const threshold = 30; // Sensitivity threshold for motion detection
-    
+
     // Compare pixels between frames to detect motion
     for (let i = 0; i < curr.length; i += 4) {
       const rDiff = Math.abs(curr[i] - prev[i]);
-      const gDiff = Math.abs(curr[i+1] - prev[i+1]);
-      const bDiff = Math.abs(curr[i+2] - prev[i+2]);
-      
+      const gDiff = Math.abs(curr[i + 1] - prev[i + 1]);
+      const bDiff = Math.abs(curr[i + 2] - prev[i + 2]);
+
       // If any color channel has changed significantly, count as motion
       if (rDiff > threshold || gDiff > threshold || bDiff > threshold) {
         diffCount++;
       }
     }
-    
+
     const totalPixels = currentFrame.width * currentFrame.height;
     const motionRatio = diffCount / totalPixels;
-    
+
     // Debug info
     console.log(`Motion level: ${(motionRatio * 100).toFixed(2)}% changed pixels`);
-    
+
     return motionRatio;
   };
-  
+
   // Start background monitoring
   const startBackgroundMonitoring = async () => {
     try {
@@ -1952,7 +1952,7 @@ const AdminDashboard = () => {
       setLastFrameData(null);
       setMotionLevel(0);
       setMonitoringFrameCount(0);
-      
+
       // Always ensure we're starting with a clean state in Firebase
       const monitoringRef = ref(database, 'monitoring/unusualActivity');
       await set(monitoringRef, {
@@ -1960,20 +1960,20 @@ const AdminDashboard = () => {
         message: 'Normal',
         timestamp: new Date().toISOString()
       });
-      
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          width: 320, 
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: 320,
           height: 240,
-          facingMode: 'environment' 
-        } 
+          facingMode: 'environment'
+        }
       });
-      
+
       monitoringStreamRef.current = stream;
       if (monitoringVideoRef.current) {
         monitoringVideoRef.current.srcObject = stream;
       }
-      
+
       // Using setTimeout to ensure the video element is properly initialized
       // and to give the camera time to adjust to lighting conditions
       setTimeout(() => {
@@ -1981,82 +1981,82 @@ const AdminDashboard = () => {
         try {
           const canvas = monitoringCanvasRef.current;
           const motionCanvas = motionCanvasRef.current;
-          
+
           if (!canvas || !motionCanvas) {
             throw new Error("Canvas elements are not available");
           }
-          
+
           const context = canvas.getContext('2d');
           const motionContext = motionCanvas.getContext('2d');
-          
+
           if (!context || !motionContext) {
             throw new Error("Could not get 2D context from canvas");
           }
-          
+
           canvas.width = 320;
           canvas.height = 240;
           motionCanvas.width = 320;
           motionCanvas.height = 240;
-          
+
           monitoringIntervalRef.current = setInterval(() => {
             try {
               if (monitoringVideoRef.current && monitoringVideoRef.current.readyState === 4) {
                 // Increment frame counter (used to ignore first few frames)
                 setMonitoringFrameCount(prev => prev + 1);
-                
+
                 // Draw current frame to main canvas
                 context.drawImage(monitoringVideoRef.current, 0, 0, canvas.width, canvas.height);
-                
+
                 // Get image data for analysis
                 const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                
+
                 // Calculate motion if we have a previous frame
                 let currentMotionLevel = 0;
                 if (lastFrameData) {
                   currentMotionLevel = calculateMotion(imageData, lastFrameData);
                   setMotionLevel(currentMotionLevel);
-                  
+
                   // Draw motion visualization to motion canvas
                   const motionData = motionContext.createImageData(canvas.width, canvas.height);
                   const currData = imageData.data;
                   const prevData = lastFrameData.data;
                   const motionDataArr = motionData.data;
-                  
+
                   for (let i = 0; i < currData.length; i += 4) {
                     const rDiff = Math.abs(currData[i] - prevData[i]);
-                    const gDiff = Math.abs(currData[i+1] - prevData[i+1]);
-                    const bDiff = Math.abs(currData[i+2] - prevData[i+2]);
-                    
+                    const gDiff = Math.abs(currData[i + 1] - prevData[i + 1]);
+                    const bDiff = Math.abs(currData[i + 2] - prevData[i + 2]);
+
                     if (rDiff > 30 || gDiff > 30 || bDiff > 30) {
                       // Highlight areas with motion in blue
                       motionDataArr[i] = 0;      // R
-                      motionDataArr[i+1] = 0;    // G
-                      motionDataArr[i+2] = 255;  // B
-                      motionDataArr[i+3] = 255;  // Alpha
+                      motionDataArr[i + 1] = 0;    // G
+                      motionDataArr[i + 2] = 255;  // B
+                      motionDataArr[i + 3] = 255;  // Alpha
                     } else {
                       // Keep original image for areas without motion
                       motionDataArr[i] = currData[i];
-                      motionDataArr[i+1] = currData[i+1];
-                      motionDataArr[i+2] = currData[i+2];
-                      motionDataArr[i+3] = 255;
+                      motionDataArr[i + 1] = currData[i + 1];
+                      motionDataArr[i + 2] = currData[i + 2];
+                      motionDataArr[i + 3] = 255;
                     }
                   }
                 }
-                
+
                 // Store current frame for next comparison
                 setLastFrameData(imageData);
-                
+
                 // Skip fire detection for the first few seconds to allow camera to adjust
                 if (monitoringFrameCount > 15) {
                   // Check for fire with more stringent criteria
                   const fireDetected = detectFire(imageData);
-                  
+
                   // Update Firebase based on detection
                   if (fireDetected) {
                     // Increment fire detection counter
                     setFireDetectionCount(prev => {
                       const newCount = prev + 1;
-                      
+
                       // Require more consecutive positive detections (5 instead of 2)
                       // This helps eliminate false positives
                       if (newCount >= 5) {
@@ -2064,7 +2064,7 @@ const AdminDashboard = () => {
                         console.log("FIRE DETECTED! Updating Firebase...");
                         const monitoringRef = ref(database, 'monitoring/unusualActivity');
                         const timestamp = new Date().toISOString();
-                        
+
                         set(monitoringRef, {
                           status: 1,
                           message: 'Fire detected',
@@ -2077,7 +2077,7 @@ const AdminDashboard = () => {
                           console.error("Error updating firebase:", err);
                         });
                       }
-                      
+
                       return newCount;
                     });
                   } else {
@@ -2090,7 +2090,7 @@ const AdminDashboard = () => {
               console.error("Error in monitoring interval:", error);
             }
           }, 300); // Run detection more frequently (3 times per second)
-          
+
           setMonitoringActive(true);
         } catch (canvasError) {
           console.error("Canvas initialization error:", canvasError);
@@ -2115,14 +2115,14 @@ const AdminDashboard = () => {
       clearInterval(analysisIntervalRef.current);
     }
     setMonitoringActive(false);
-    
+
     // Reset detection states
     setFireDetected(false);
     setBlinking(false);
     setFireDetectionCount(0);
     setLastFrameData(null);
     setMotionLevel(0);
-    
+
     // Always reset Firebase status when stopping monitoring
     const monitoringRef = ref(database, 'monitoring/unusualActivity');
     set(monitoringRef, {
@@ -2143,14 +2143,14 @@ const AdminDashboard = () => {
   const handleCheckIn = (booking) => {
     setCurrentBooking(booking);
     setShowCamera(true);
-    
+
     // Find if there's an existing verification log for this booking
     const existingLog = findExistingVerificationLog(booking.id);
-    
+
     // Set initial verification status based on existing log
     setVerificationStatus(existingLog ? existingLog.status : 0);
     setVerified(existingLog && existingLog.status === 1 ? true : null);
-    
+
     startCamera();
   };
 
@@ -2211,30 +2211,30 @@ const AdminDashboard = () => {
       // Find existing verification log
       const existingLog = findExistingVerificationLog(currentBooking.id);
       const timestamp = new Date().toISOString();
-      
+
       // 1. Upload the captured image to Firebase Storage
       const checkInImageRef = storageRef(storage, `check-ins/${currentBooking.id}_${Date.now()}.jpg`);
       await uploadBytes(checkInImageRef, imageBlob);
       const checkInImageUrl = await getDownloadURL(checkInImageRef);
-      
+
       // 2. Get user reference data
       const userRef = ref(database, `users/${currentBooking.userId}`);
       const userSnapshot = await get(userRef);
       let profileImageUrl = null;
       let userName = "Unknown User";
-      
+
       if (userSnapshot.exists()) {
         const userData = userSnapshot.val();
         profileImageUrl = userData.faceImageUrl || userData.profileImageUrl;
         userName = userData.name || userData.displayName || "Unknown User";
       }
-      
+
       // 3. Simulate face verification (in a real app, use a face comparison API)
       setTimeout(() => {
         // Simulate 70% success rate
-        const isMatch = Math.random() > 0.3; 
+        const isMatch = Math.random() > 0.3;
         const numericStatus = isMatch ? 1 : 0; // 1 = verified, 0 = failed
-        
+
         // 4. Update the transaction record
         const bookingRef = ref(database, `stadium_transactions/${currentBooking.id}`);
         update(bookingRef, {
@@ -2244,10 +2244,10 @@ const AdminDashboard = () => {
           identityVerified: isMatch,
           verificationStatus: numericStatus // Numeric status
         });
-        
+
         // 5. Update existing verification log or create a new one
         let logRef;
-        
+
         if (existingLog) {
           // Update existing log
           logRef = ref(database, `verification_logs/${existingLog.id}`);
@@ -2277,7 +2277,7 @@ const AdminDashboard = () => {
             location: "Stadium Entrance"
           });
         }
-        
+
         // 6. Add to user's verification history
         const userHistoryRef = ref(database, `users/${currentBooking.userId}/verification_history/${Date.now()}`);
         set(userHistoryRef, {
@@ -2285,12 +2285,12 @@ const AdminDashboard = () => {
           status: numericStatus,
           bookingId: currentBooking.id
         });
-        
+
         // 7. Update the UI state
         setVerified(isMatch);
         setVerificationStatus(numericStatus);
         setComparing(false);
-        
+
         if (isMatch) {
           setTimeout(() => {
             stopCamera();
@@ -2314,7 +2314,7 @@ const AdminDashboard = () => {
     const monitoringRef = ref(database, 'monitoring/unusualActivity');
     const timestamp = new Date().toISOString();
     const message = 'Fire detected';
-    
+
     set(monitoringRef, {
       status: 1,
       message: message,
@@ -2332,7 +2332,7 @@ const AdminDashboard = () => {
   const resetFireDetection = () => {
     const monitoringRef = ref(database, 'monitoring/unusualActivity');
     const timestamp = new Date().toISOString();
-    
+
     set(monitoringRef, {
       status: 0,
       message: 'Normal',
@@ -2353,7 +2353,7 @@ const AdminDashboard = () => {
   return (
     <div className="admin-dashboard">
       <h2 className="dashboard-title">Dashboard</h2>
-      
+
       <div className="stats-grid">
         {statCards.map((card, index) => (
           <div key={index} className={`stat-card card-${card.color}`}>
@@ -2365,16 +2365,18 @@ const AdminDashboard = () => {
           </div>
         ))}
       </div>
-      
+
       <div className="dashboard-tables">
         <div className="monitoring-section">
           <h3>Environment Monitoring</h3>
           <div className="monitoring-grid">
             {monitoringCards.map((card, index) => (
-              <div key={index} className={`monitoring-card ${card.gradientClass}`} 
-                   style={{animation: (card.title === 'Fire Detection' && stats.fireDetection === 'Fire detected') || 
-                          (card.title === 'Unusual Activity' && stats.activityStatus === 1) ? 
-                          'pulse-red 1s infinite alternate' : 'none'}}
+              <div key={index} className={`monitoring-card ${card.gradientClass}`}
+                style={{
+                  animation: (card.title === 'Fire Detection' && stats.fireDetection === 'Fire detected') ||
+                    (card.title === 'Unusual Activity' && stats.activityStatus === 1) ?
+                    'pulse-red 1s infinite alternate' : 'none'
+                }}
               >
                 <div className="monitoring-icon">{card.icon}</div>
                 <div className="monitoring-info">
@@ -2395,10 +2397,10 @@ const AdminDashboard = () => {
               to { opacity: 0.7; }
             }
           `}</style>
-          
+
           <div className="monitoring-controls">
             {monitoringActive ? (
-              <button 
+              <button
                 onClick={stopBackgroundMonitoring}
                 className="monitoring-button stop"
                 style={{
@@ -2418,7 +2420,7 @@ const AdminDashboard = () => {
                 <span style={{ marginLeft: '8px' }}>Stop Monitoring</span>
               </button>
             ) : (
-              <button 
+              <button
                 onClick={startBackgroundMonitoring}
                 className="monitoring-button start"
                 style={{
@@ -2438,11 +2440,11 @@ const AdminDashboard = () => {
                 <span style={{ marginLeft: '8px' }}>Start Monitoring</span>
               </button>
             )}
-            
+
             {/* Testing buttons for development */}
             {monitoringActive && (
               <>
-                <button 
+                <button
                   onClick={forceFireDetection}
                   style={{
                     padding: '8px 16px',
@@ -2460,8 +2462,8 @@ const AdminDashboard = () => {
                   <AlertTriangle size={20} />
                   <span style={{ marginLeft: '8px' }}>Test Fire</span>
                 </button>
-                
-                <button 
+
+                <button
                   onClick={resetFireDetection}
                   style={{
                     padding: '8px 16px',
@@ -2481,10 +2483,10 @@ const AdminDashboard = () => {
               </>
             )}
           </div>
-          
+
           {/* Calibration message when monitoring just started */}
           {monitoringActive && monitoringFrameCount < 15 && (
-            <div style={{ 
+            <div style={{
               marginTop: '15px',
               padding: '10px',
               backgroundColor: '#e3f2fd',
@@ -2492,9 +2494,9 @@ const AdminDashboard = () => {
               borderRadius: '4px',
               textAlign: 'center'
             }}>
-              <p style={{ 
-                margin: 0, 
-                color: '#0d47a1', 
+              <p style={{
+                margin: 0,
+                color: '#0d47a1',
                 fontWeight: 'bold',
                 display: 'flex',
                 alignItems: 'center',
@@ -2505,9 +2507,9 @@ const AdminDashboard = () => {
               </p>
             </div>
           )}
-          
+
           {fireDetected && (
-            <div style={{ 
+            <div style={{
               marginTop: '15px',
               padding: '10px',
               backgroundColor: blinking ? '#ffebee' : '#fff3e0',
@@ -2516,9 +2518,9 @@ const AdminDashboard = () => {
               textAlign: 'center',
               animation: blinking ? 'blink 1s infinite alternate' : 'none'
             }}>
-              <p style={{ 
-                margin: 0, 
-                color: blinking ? '#d32f2f' : '#e65100', 
+              <p style={{
+                margin: 0,
+                color: blinking ? '#d32f2f' : '#e65100',
                 fontWeight: 'bold',
                 display: 'flex',
                 alignItems: 'center',
@@ -2529,29 +2531,29 @@ const AdminDashboard = () => {
               </p>
             </div>
           )}
-          
+
           {/* Always render the video and canvas elements but only show when active */}
-          <div className="monitoring-container" style={{ 
-            marginTop: '15px', 
+          <div className="monitoring-container" style={{
+            marginTop: '15px',
             display: monitoringActive ? 'block' : 'none'
           }}>
-            <div style={{ 
-              padding: '15px', 
-              backgroundColor: '#f5f5f5', 
+            <div style={{
+              padding: '15px',
+              backgroundColor: '#f5f5f5',
               borderRadius: '8px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)' 
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
             }}>
               <h4 style={{ margin: '0 0 10px 0', color: '#333' }}>Live Monitoring Feed</h4>
               <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <video 
+                <video
                   ref={monitoringVideoRef}
                   autoPlay
                   playsInline
                   muted
                   width="320"
                   height="240"
-                  style={{ 
-                    border: '1px solid #ddd', 
+                  style={{
+                    border: '1px solid #ddd',
                     borderRadius: '4px',
                     backgroundColor: '#000'
                   }}
@@ -2559,40 +2561,40 @@ const AdminDashboard = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Hidden canvases for processing */}
-          <canvas 
-            ref={monitoringCanvasRef} 
-            width="320" 
-            height="240" 
-            style={{ 
+          <canvas
+            ref={monitoringCanvasRef}
+            width="320"
+            height="240"
+            style={{
               display: 'none',
               position: 'absolute',
               pointerEvents: 'none'
-            }} 
+            }}
           />
-          <canvas 
-            ref={motionCanvasRef} 
-            width="320" 
-            height="240" 
-            style={{ 
+          <canvas
+            ref={motionCanvasRef}
+            width="320"
+            height="240"
+            style={{
               display: 'none',
               position: 'absolute',
               pointerEvents: 'none'
-            }} 
+            }}
           />
         </div>
-        
+
         {/* Verification Logs Section */}
         <div className="verification-logs-section">
-          <div className="section-header" style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+          <div className="section-header" style={{
+            display: 'flex',
+            justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: '15px'
           }}>
             <h3>Verification Status</h3>
-            <button 
+            <button
               onClick={toggleVerificationLogs}
               style={{
                 padding: '6px 12px',
@@ -2610,7 +2612,7 @@ const AdminDashboard = () => {
               <span style={{ marginLeft: '6px' }}>{showVerificationLogs ? 'Hide Logs' : 'Show Logs'}</span>
             </button>
           </div>
-          
+
           {showVerificationLogs && (
             <div className="verification-logs-table" style={{
               backgroundColor: '#fff',
@@ -2664,7 +2666,7 @@ const AdminDashboard = () => {
             </div>
           )}
         </div>
-        
+
         <div className="recent-bookings">
           <h3>Recent Bookings</h3>
           {stats.recentBookings.length > 0 ? (
@@ -2684,7 +2686,7 @@ const AdminDashboard = () => {
                   // Find verification log for this booking
                   const verLog = verificationLogs.find(log => log.bookingId === booking.id);
                   const verStatus = verLog ? verLog.status : 0;
-                  
+
                   return (
                     <tr key={booking.id}>
                       <td>{index + 1}</td>
@@ -2713,7 +2715,7 @@ const AdminDashboard = () => {
                         </div>
                       </td>
                       <td>
-                        <button 
+                        <button
                           className="check-in-button"
                           onClick={() => handleCheckIn(booking)}
                           disabled={booking.checkedIn && verStatus === 1}
@@ -2740,7 +2742,7 @@ const AdminDashboard = () => {
           )}
         </div>
       </div>
-      
+
       {showCamera && (
         <div className="camera-modal-overlay" style={{
           position: 'fixed',
@@ -2768,9 +2770,11 @@ const AdminDashboard = () => {
               alignItems: 'center',
               marginBottom: '15px'
             }}>
-              <h3 style={{ margin: 0 }}>Check-In Verification</h3>
-              <button 
-                className="close-button" 
+              <h3 style={{
+                margin: 0,
+              }}>Check-In Verification</h3>
+              <button
+                className="close-button"
                 onClick={stopCamera}
                 style={{
                   background: 'none',
@@ -2782,7 +2786,7 @@ const AdminDashboard = () => {
                 <X size={24} />
               </button>
             </div>
-            
+
             <div className="camera-container" style={{
               position: 'relative',
               width: '100%',
@@ -2791,7 +2795,7 @@ const AdminDashboard = () => {
               overflow: 'hidden',
               marginBottom: '20px'
             }}>
-              <video 
+              <video
                 ref={videoRef}
                 autoPlay
                 playsInline
@@ -2803,7 +2807,7 @@ const AdminDashboard = () => {
                 }}
               />
               <canvas ref={canvasRef} style={{ display: 'none' }} />
-              
+
               {verified === true && (
                 <div className="verification-result success" style={{
                   position: 'absolute',
@@ -2822,7 +2826,7 @@ const AdminDashboard = () => {
                   <p style={{ fontSize: '20px', fontWeight: 'bold', marginTop: '10px' }}>Identity Verified!</p>
                 </div>
               )}
-              
+
               {verified === false && (
                 <div className="verification-result failure" style={{
                   position: 'absolute',
@@ -2842,18 +2846,20 @@ const AdminDashboard = () => {
                 </div>
               )}
             </div>
-            
+
             <div className="camera-controls">
               {!comparing && verified === null && (
-                <button 
+                <button
                   className="capture-button"
                   onClick={captureImage}
                   style={{
+                     position: ' relative',
+                bottom: '30px',
                     padding: '12px 24px',
                     backgroundColor: '#4CAF50',
                     color: 'white',
                     border: 'none',
-                    borderRadius: '4px', 
+                    borderRadius: '4px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -2869,7 +2875,7 @@ const AdminDashboard = () => {
                   <span>Capture Image</span>
                 </button>
               )}
-              
+
               {comparing && (
                 <div className="comparing-indicator" style={{
                   textAlign: 'center',
@@ -2892,9 +2898,9 @@ const AdminDashboard = () => {
                   `}</style>
                 </div>
               )}
-              
+
               {verified === false && (
-                <button 
+                <button
                   className="retry-button"
                   onClick={() => setVerified(null)}
                   style={{
@@ -2913,7 +2919,7 @@ const AdminDashboard = () => {
                 </button>
               )}
             </div>
-            
+
             {/* Verification Status Number Display */}
             <div style={{
               marginTop: '15px',
@@ -2923,7 +2929,7 @@ const AdminDashboard = () => {
               textAlign: 'center'
             }}>
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <p style={{ 
+                <p style={{
                   margin: '0 10px 0 0',
                   fontWeight: '500'
                 }}>
@@ -2945,14 +2951,14 @@ const AdminDashboard = () => {
                   {verificationStatus}
                 </div>
               </div>
-              <p style={{ 
+              <p style={{
                 margin: '5px 0 0 0',
                 fontWeight: '500',
                 fontSize: '14px',
                 color: '#757575'
               }}>
-                {verificationStatus === 0 
-                  ? (verified === null ? 'Not Verified Yet' : 'Verification Failed') 
+                {verificationStatus === 0
+                  ? (verified === null ? 'Not Verified Yet' : 'Verification Failed')
                   : 'Successfully Verified'}
               </p>
             </div>
